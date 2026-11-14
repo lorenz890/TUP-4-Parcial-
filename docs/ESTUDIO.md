@@ -155,3 +155,28 @@
 - Un cambio chico para practicar: pedir al menos 10 caracteres en las
   contraseñas nuevas (se cambia en un solo lugar, `campoContrasenaNueva` en
   `esquemas/auth.ts`), o agregar un tercer rol.
+
+## Etapa 5 — Publicar en Vercel + Turso
+- Qué se hizo: se creó la base `gestion-comercial` en Turso, se le aplicaron la
+  migración y el seed con los mismos scripts de siempre, y se importó el repositorio
+  en Vercel con tres variables de entorno. Los pasos están en el README.
+- Archivos clave:
+  - `README.md` → puesta en marcha y publicación, paso a paso.
+  - `src/db/conexion.ts` → sin cambios: con `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` usa Turso, y si no, `local.db`.
+  - `drizzle.config.ts` → la misma regla, para que `db:migrate` apunte a Turso.
+- Flujo explicado: el código es el mismo en la máquina y en producción; lo único que
+  cambia son las variables de entorno. Para preparar Turso se cargan la URL y el
+  token en la terminal y se corren `db:migrate` (crea las tablas) y `db:seed` (crea el
+  administrador). En Vercel se cargan `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` y
+  `SESSION_SECRET`; cada vez que se sube código a `main`, Vercel compila y publica.
+  Los secretos nunca están en el repositorio: solo en Vercel y en la terminal.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Cómo sabe la app si usa SQLite o Turso? Por las variables de entorno, en
+    `src/db/conexion.ts`. Si están las dos de Turso, usa Turso.
+  - ¿Dónde está guardado el token de Turso? Solo en las variables de entorno de
+    Vercel (como *Sensitive*) y nunca en el código ni en Git.
+  - ¿Por qué `SESSION_SECRET` de producción es distinta de la de desarrollo? Porque
+    la de desarrollo está en `.env.example`, que es público; con ella cualquiera
+    podría firmar una cookie de sesión falsa.
+- Un cambio chico para practicar: cambiar la contraseña del administrador de
+  producción desde la pantalla de perfil de la URL pública.
