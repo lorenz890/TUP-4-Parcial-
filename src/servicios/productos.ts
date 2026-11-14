@@ -1,5 +1,5 @@
 import { and, count, eq, like, lt, ne, or } from "drizzle-orm";
-import { db } from "@/db/conexion";
+import { db, transaccion } from "@/db/conexion";
 import { categorias, productos } from "@/db/esquema";
 import { esquemaId } from "@/esquemas/comunes";
 import {
@@ -126,7 +126,7 @@ export async function crearProducto(usuario: UsuarioAutenticado, entrada: unknow
   }
   await exigirCategoriaActiva(datos.categoriaId);
 
-  const id = await db.transaction(async (tx) => {
+  const id = await transaccion(async (tx) => {
     const [creado] = await tx
       .insert(productos)
       .values({

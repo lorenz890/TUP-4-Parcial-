@@ -1,5 +1,5 @@
 import { and, count, desc, eq, gte, lt, type SQL, sql } from "drizzle-orm";
-import { db, type Transaccion } from "@/db/conexion";
+import { db, transaccion, type Transaccion } from "@/db/conexion";
 import { facturas, movimientosStock, productos, usuarios } from "@/db/esquema";
 import { esquemaId } from "@/esquemas/comunes";
 import { esquemaListarMovimientos, esquemaMovimientoManual } from "@/esquemas/stock";
@@ -87,7 +87,7 @@ export async function registrarMovimientoManual(
   // El signo lo pone el servicio: el cliente siempre manda una cantidad positiva.
   const cantidad = datos.tipo === "ingreso" ? datos.cantidad : -datos.cantidad;
 
-  const { id } = await db.transaction((tx) =>
+  const { id } = await transaccion((tx) =>
     moverStock(tx, {
       productoId,
       usuarioId: usuario.id,

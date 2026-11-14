@@ -80,3 +80,16 @@ Vercel despliega solo cada vez que se sube código a la rama `main`. Cuando term
 se abre la URL pública y se entra con el email y la contraseña del administrador.
 Si se cambia una variable de entorno, hay que volver a desplegar (**Deployments →
 Redeploy**) para que tome el valor nuevo.
+
+## Pruebas automáticas
+
+```bash
+pnpm test
+```
+
+Corren con vitest sobre una base SQLite **temporal** (en la carpeta temporal del sistema, con el
+mismo esquema y las mismas migraciones que la aplicación). Nunca tocan `local.db` ni Turso: la
+configuración vacía las variables de Turso y `pruebas/seguridad.ts` corta si la base no es la temporal.
+Cubren la lista de control de la sección 10.8: venta sin stock sin datos parciales, dos ventas
+simultáneas de la última unidad, un vendedor contra las operaciones de administrador, y existencia y
+saldo que coinciden con sus movimientos.

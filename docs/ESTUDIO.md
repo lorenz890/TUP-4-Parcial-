@@ -248,3 +248,60 @@
     ("el último + 1") y la tabla tiene un índice único por punto de venta y número.
 - Un cambio chico para practicar: pedir que el teléfono de un cliente tenga al menos 6
   dígitos cuando se carga. Va en `esquemas/clientes.ts` y vale para el formulario y la API.
+
+## Etapa 8 — Facturación en el servidor, con pruebas
+- Qué se hizo: el servicio de facturas con `confirmarFactura()` y `anularFactura()`, la consulta
+  y el listado con filtros, los 5 endpoints de la sección 11.6 y 33 pruebas automáticas de la
+  lista de control 10.8. Todavía no hay pantallas de ventas (etapa 9).
+- Archivos clave:
+  - `src/servicios/facturas.ts` → `confirmarFactura()`, `anularFactura()`, `listarFacturas()`, `obtenerFactura()`.
+  - `src/esquemas/facturas.ts` → qué acepta el pedido (sin precios, tarjeta solo con los últimos 4 dígitos).
+  - `src/app/api/facturas/**` → las rutas: solo llaman al servicio.
+  - `src/db/conexion.ts` → ahora también tiene `transaccion()`, que pone las transacciones en fila.
+  - `pruebas/*.test.ts` → las pruebas; `pruebas/ayudas.ts` → datos de prueba; `vitest.config.mts` → configuración.
+  - `pruebas/base-de-pruebas.ts` → crea una base temporal y le aplica las migraciones; `pruebas/seguridad.ts` → corta si apuntaran a Turso o a `local.db`.
+
+### La confirmación, paso por paso (`confirmarFactura`)
+Todo ocurre dentro de UNA transacción: si cualquier paso falla, no queda nada grabado. Los
+pasos 1 a 5 solo leen y validan; recién en los pasos 6 a 9 se escribe.
+0. Antes de abrir la transacción, zod valida el pedido. Si trae un campo que no está previsto
+   (un precio, el número completo de una tarjeta) se rechaza con 422.
+1. **Productos.** Se leen todos los del pedido. Si alguno no existe, 404; si está dado de baja, 422 `PRODUCTO_INACTIVO`.
+2. **Cliente.** Si hay cliente, se lee y debe estar activo. Si el pago es a cuenta corriente, el
+   cliente tiene que existir y tener la cuenta habilitada: así consumidor final no puede comprar a cuenta (regla 6).
+3. **Existencia.** Se compara lo pedido con lo que hay de cada producto. Si algo no alcanza, 409
+   `STOCK_INSUFICIENTE` con la lista de TODOS los que fallan (regla 1). Es una revisión previa para dar un
+   mensaje claro; la garantía real es el paso 8.
+4. **Precios.** El precio y la descripción salen del catálogo, en el servidor; se calculan los
+   subtotales y el total. Lo que mande el cliente no cuenta (regla 3).
+5. **Forma de pago.** Contado: el monto recibido (o el total, si falta) tiene que cubrir el total, si no 422
+   `MONTO_INSUFICIENTE`. Cuenta corriente: se calcula el saldo actual y, si el saldo nuevo supera el límite
+   de crédito, 422 `LIMITE_CREDITO_EXCEDIDO` (regla 7).
+6. **Número.** Se toma el último número de factura + 1. Es recién ahora, al confirmar, y la transacción
+   es exclusiva para escribir: no hay otra confirmación a la vez, así que no hay huecos ni repetidos (regla 4).
+7. **Factura y renglones.** Se graban la factura (con vendedor y fecha, regla 11; de la tarjeta, solo tipo,
+   marca y últimos 4, regla 9) y sus renglones con la descripción y el precio copiados.
+8. **Stock.** Por cada renglón se llama a `moverStock()`: un `UPDATE ... WHERE existencia + cantidad >= 0`
+   y su movimiento de venta (reglas 1 y 2). Si otra venta se llevó la última unidad, acá se rechaza y se deshace todo.
+9. **Cuenta corriente.** Si el pago fue a cuenta, se graba el débito por el total en `movimientos_cuenta`.
+Al final se vuelve a leer la factura completa para devolverla.
+
+### La anulación (`anularFactura`)
+Solo admin y con motivo. Marca la factura como anulada con un `UPDATE ... WHERE estado = 'emitida'` (si dos
+administradores anulan a la vez, solo uno la encuentra emitida), reingresa la existencia de cada
+renglón con `moverStock()` (movimiento de anulación) y, si fue a cuenta corriente, graba un crédito por el
+total. La factura no se borra (regla 5) y conserva su número.
+
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Qué pasa si dos vendedores venden la última unidad a la vez? Solo una factura se confirma; la otra
+    recibe 409. Lo prueba `pruebas/facturas.test.ts` lanzando las dos con `Promise.all`, cinco veces.
+  - ¿Y si algo falla a mitad de la venta? Se deshace todo. Una prueba hace fallar el descuento del 2.º
+    renglón, cuando la factura y el 1.º renglón ya estaban grabados, y comprueba que no queda nada.
+  - ¿Por qué hay una cola de transacciones (`transaccion()`)? Con un archivo SQLite local, dos transacciones de
+    escritura que se superponen en el mismo proceso se bloquean entre sí. La cola las hace de a una. Con
+    Turso, el servidor ordena los escritores; la cola no estorba.
+  - ¿Dónde se calcula el total? En `confirmarFactura()`, paso 4, con los precios del catálogo.
+  - ¿Cómo sabe que existencia y saldo coinciden con sus movimientos? `pruebas/integridad.test.ts` lo recalcula
+    con consultas directas después de una tanda de ventas, anulaciones, pagos y operaciones que fallan.
+- Un cambio chico para practicar: pedir que una venta de contado tenga un total mínimo de $ 100 (rechazo
+  con 422). Va en el paso 5 de `confirmarFactura()`.

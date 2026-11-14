@@ -119,7 +119,7 @@ implementarlos.
 Pruebo yo: dónde se calcula el saldo y dónde se rechaza un pago mayor a la
 deuda.
 
-## [ ] Etapa 8 — Facturación en el servidor, con pruebas (usar Opus)
+## [x] Etapa 8 — Facturación en el servidor, con pruebas (usar Opus)
 
 Implementá el servicio de facturas y sus endpoints de la sección 11.6:
 RF-V5, RF-V6, RF-V8 y RF-V9, y las reglas 1 a 6 y 9 a 11.

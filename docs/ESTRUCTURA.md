@@ -8,13 +8,15 @@
 /
 ├── drizzle.config.ts          ← configuración de drizzle-kit (esquema y carpeta de migraciones)
 ├── migraciones/               ← SQL generado por drizzle-kit (no se edita a mano)
+├── pruebas/                   ← pruebas automáticas (vitest) sobre una base temporal, nunca local.db ni Turso
+├── vitest.config.mts          ← configuración de las pruebas (comando: pnpm test)
 ├── .env.example
 └── src/
     ├── proxy.ts               ← barrera 1: sin cookie firmada → redirige a /login
     │
     ├── db/                    ← CAPA ACCESO A DATOS
     │   ├── esquema.ts         ← las 9 tablas de la sección 7
-    │   ├── conexion.ts        ← decide SQLite local (file:local.db) o Turso
+    │   ├── conexion.ts        ← decide SQLite local (file:local.db) o Turso; transaccion() las pone en fila
     │   └── seed.ts            ← datos iniciales (usa los servicios, sección 10.7)
     │
     ├── esquemas/              ← ESQUEMAS ZOD (compartidos formulario ↔ servidor)

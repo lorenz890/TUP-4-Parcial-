@@ -1,5 +1,5 @@
 import { eq, sql } from "drizzle-orm";
-import { db } from "@/db/conexion";
+import { db, transaccion } from "@/db/conexion";
 import { clientes, movimientosCuenta, pagos, usuarios } from "@/db/esquema";
 import { esquemaId } from "@/esquemas/comunes";
 import { esquemaRegistrarPago } from "@/esquemas/pagos";
@@ -16,7 +16,7 @@ export async function registrarPago(usuario: UsuarioAutenticado, idClienteCrudo:
   const clienteId = esquemaId.parse(idClienteCrudo);
   const datos = esquemaRegistrarPago.parse(entrada);
 
-  const idPago = await db.transaction(async (tx) => {
+  const idPago = await transaccion(async (tx) => {
     const [cliente] = await tx.select().from(clientes).where(eq(clientes.id, clienteId));
     if (!cliente) {
       throw new ApiError(404, "NO_ENCONTRADO", "El cliente no existe.");
