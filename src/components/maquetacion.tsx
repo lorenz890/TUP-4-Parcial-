@@ -22,3 +22,9 @@ export function Texto({ className, ...props }: ComponentProps<"p">) {
 export function Titulo({ className, ...props }: ComponentProps<"h1">) {
   return <h1 className={cn("text-2xl font-semibold tracking-tight", className)} {...props} />;
 }
+
+// Reparte los hijos en columnas. Las columnas se indican con clases de Tailwind
+// al usarla, por ejemplo <Grilla className="sm:grid-cols-4">.
+export function Grilla({ className, ...props }: ComponentProps<"div">) {
+  return <div className={cn("grid gap-4", className)} {...props} />;
+}

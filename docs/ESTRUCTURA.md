@@ -49,7 +49,7 @@
     │   │   ├── layout.tsx     ← barrera 2: busca el usuario; si no hay, /login
     │   │   ├── page.tsx       ← tablero (/)
     │   │   ├── ventas/        ← page.tsx, nueva/page.tsx, [id]/page.tsx
-    │   │   ├── productos/     ← page.tsx, [id]/page.tsx, categorias/page.tsx
+    │   │   ├── productos/     ← page.tsx, existencias/page.tsx (pestaña), [id]/page.tsx, categorias/page.tsx
     │   │   ├── clientes/      ← page.tsx, [id]/page.tsx, saldos/page.tsx
     │   │   ├── usuarios/page.tsx
     │   │   └── perfil/page.tsx

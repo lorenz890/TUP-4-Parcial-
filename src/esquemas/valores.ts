@@ -9,3 +9,7 @@ export const TIPOS_TARJETA = ["debito", "credito"] as const;
 export const ESTADOS_FACTURA = ["emitida", "anulada"] as const;
 export const MEDIOS_DE_PAGO = ["efectivo", "transferencia", "tarjeta_debito"] as const;
 export const TIPOS_MOVIMIENTO_CUENTA = ["debito", "credito"] as const;
+
+// Motivos de los movimientos manuales de stock (sección 11.4).
+export const MOTIVOS_INGRESO = ["Reposición", "Stock inicial", "Devolución de cliente"] as const;
+export const MOTIVOS_EGRESO = ["Rotura", "Vencimiento", "Ajuste de inventario", "Uso interno"] as const;

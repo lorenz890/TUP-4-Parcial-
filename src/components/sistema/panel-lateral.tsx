@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Users } from "lucide-react";
+import { LayoutDashboard, Package, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Pila, Texto } from "@/components/maquetacion";
@@ -10,6 +10,7 @@ import type { UsuarioAutenticado } from "@/lib/permisos";
 // Por ahora solo los módulos que existen; se suman uno por etapa.
 const modulos = [
   { nombre: "Inicio", ruta: "/", icono: LayoutDashboard, soloAdmin: false },
+  { nombre: "Productos", ruta: "/productos", icono: Package, soloAdmin: false },
   { nombre: "Usuarios", ruta: "/usuarios", icono: Users, soloAdmin: true },
 ];
 

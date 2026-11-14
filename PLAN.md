@@ -95,7 +95,7 @@ pasos en el README.
 
 Pruebo yo: que el login funcione en la URL pública.
 
-## [ ] Etapa 6 — Productos y stock
+## [x] Etapa 6 — Productos y stock
 
 Implementá productos, categorías y existencias: RF-P1 a RF-P7, reglas 1, 2 y
 12, y los endpoints de la sección 11.4.

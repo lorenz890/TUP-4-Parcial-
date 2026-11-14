@@ -34,7 +34,9 @@ export function useFormulario<Valores extends Record<string, unknown>, Salida>({
   async function alEnviar(evento: FormEvent) {
     evento.preventDefault();
 
-    const revision = esquema.safeParse(valores);
+    // Una clave con valor `undefined` cuenta como campo presente para `.strict()`: se saca.
+    const sinVacios = Object.fromEntries(Object.entries(valores).filter(([, valor]) => valor !== undefined));
+    const revision = esquema.safeParse(sinVacios);
     if (!revision.success) {
       const deZod: Errores = {};
       for (const problema of revision.error.issues) {
@@ -58,7 +60,10 @@ export function useFormulario<Valores extends Record<string, unknown>, Salida>({
     const detalles = resultado.error.details;
     if (Array.isArray(detalles)) {
       for (const detalle of detalles) {
-        deServidor[detalle.campo || "general"] ??= detalle.mensaje;
+        // Solo los detalles con forma { campo, mensaje }; otros (como el de stock) no son de un campo.
+        if (typeof detalle?.mensaje === "string") {
+          deServidor[detalle.campo || "general"] ??= detalle.mensaje;
+        }
       }
     }
     // Sin detalle por campo (credenciales, email repetido...): va como error general.

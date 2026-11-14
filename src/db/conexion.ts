@@ -19,3 +19,7 @@ const cliente = createClient(
 );
 
 export const db = drizzle(cliente, { schema: esquema });
+
+// Tipo de la transacción que recibe db.transaction(): las funciones que se llaman
+// "dentro" de una transacción (como moverStock) lo piden para usar la misma.
+export type Transaccion = Parameters<Parameters<typeof db.transaction>[0]>[0];

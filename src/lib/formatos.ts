@@ -66,3 +66,30 @@ export function formatearNumeroFactura(puntoVenta: number, numero: number): stri
 export function formatearNumeroRecibo(puntoVenta: number, numero: number): string {
   return `R ${formatearNumeroFactura(puntoVenta, numero)}`;
 }
+
+// "12.345,50" → 1234550. Es lo que se escribe en los campos de importe.
+// Los puntos son separadores de miles y la coma separa los centavos.
+// Devuelve null si el texto no es un importe válido.
+export function pesosACentavos(texto: string): number | null {
+  const limpio = texto.replace(/\./g, "").replace(",", ".").trim();
+  if (!/^\d+(\.\d{1,2})?$/.test(limpio)) return null;
+  return Math.round(Number(limpio) * 100);
+}
+
+// 1234550 → "12345,50". Para precargar un campo de importe al editar.
+export function centavosATexto(centavos: number): string {
+  return (centavos / 100).toFixed(2).replace(".", ",");
+}
+
+// Los filtros por día ("2026-10-29") se interpretan en hora de Argentina (UTC-3,
+// sin horario de verano). Estas dos funciones los pasan al rango UTC que se guarda
+// en la base: desde las 00:00 de ese día hasta las 00:00 del siguiente.
+export function inicioDelDia(dia: string): string {
+  return new Date(`${dia}T00:00:00-03:00`).toISOString().replace(".000Z", "Z");
+}
+
+export function inicioDelDiaSiguiente(dia: string): string {
+  const fecha = new Date(`${dia}T00:00:00-03:00`);
+  fecha.setUTCDate(fecha.getUTCDate() + 1);
+  return fecha.toISOString().replace(".000Z", "Z");
+}

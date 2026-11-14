@@ -180,3 +180,40 @@
     podría firmar una cookie de sesión falsa.
 - Un cambio chico para practicar: cambiar la contraseña del administrador de
   producción desde la pantalla de perfil de la URL pública.
+
+## Etapa 6 — Productos y stock
+- Qué se hizo: productos, categorías y movimientos de stock (RF-P1 a RF-P7, reglas 1, 2 y
+  12), con los 8 endpoints de la sección 11.4 más el historial global. La existencia solo
+  la cambia `moverStock()`. Pantallas: catálogo, pestaña de existencias y movimientos,
+  ficha del producto (con ingreso, egreso, edición y baja) y categorías.
+- Archivos clave:
+  - `src/servicios/stock.ts` → `moverStock()` (la única función que cambia la existencia), el ingreso/egreso manual y la consulta de movimientos.
+  - `src/servicios/productos.ts` → alta (el stock inicial entra como ingreso), edición, baja lógica y listado.
+  - `src/servicios/categorias.ts` → alta, edición y baja (no se puede dar de baja con productos activos).
+  - `src/esquemas/productos.ts`, `stock.ts`, `categorias.ts` → los esquemas de Zod, compartidos con los formularios.
+  - `src/app/api/productos/**`, `categorias/**`, `movimientos-stock/` → las rutas: solo llaman al servicio.
+  - `src/app/(sistema)/productos/**` → las pantallas; `src/components/productos/` y `categorias/` → sus diálogos, filtros y tablas.
+  - `src/components/comunes/campo-importe.tsx` → el campo donde se escribe `12.500,50` y que entrega centavos.
+- Flujo explicado: cada egreso (manual o, más adelante, una venta) llama a
+  `moverStock(tx, ...)` dentro de una transacción. Esa función hace UNA sentencia:
+  `UPDATE productos SET existencia = existencia + cantidad WHERE id = ? AND existencia + cantidad >= 0`.
+  La condición la evalúa la propia base al mismo tiempo que cambia el valor, así que no
+  hay un hueco entre «mirar si alcanza» y «descontar»: dos pedidos simultáneos por la
+  última unidad no pueden pasar los dos, el segundo no modifica ninguna fila. Si no se
+  modificó ninguna fila, la función mira por qué: si el producto no existe responde 404, y
+  si no alcanza, 409 `STOCK_INSUFICIENTE` con lo solicitado y lo disponible. Si sí
+  se modificó, graba el movimiento con la existencia resultante en la misma
+  transacción. Por eso la suma de los movimientos de un producto siempre da su existencia.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Qué pasa si dos vendedores venden la última unidad a la vez? Las dos llaman a
+    `moverStock()`; el `UPDATE ... WHERE existencia + cantidad >= 0` lo resuelve la base:
+    una modifica la fila y la otra no, y recibe 409. Se probó con 6 pedidos simultáneos: 1 pasó y 5 dieron 409.
+  - ¿Por qué `existencia` no se acepta en el `PATCH`? Porque los esquemas de edición son
+    `.strict()`: cualquier campo no previsto se rechaza con 422, sin código extra.
+  - ¿Dónde está la regla de que no se da de baja una categoría con productos activos? En
+    `editarCategoria()` de `servicios/categorias.ts`; responde 409 `CATEGORIA_EN_USO`.
+  - ¿Cómo se sabe que la existencia es correcta? Es igual a la suma de los movimientos
+    (`cantidad` con signo) y además la base tiene un CHECK que impide una existencia negativa.
+- Un cambio chico para practicar: pedir que el precio de un producto sea mayor a cero
+  (hoy se acepta $ 0): se cambia en un solo lugar, `campoPrecio` en `esquemas/productos.ts`,
+  y vale para el formulario y para la API.
