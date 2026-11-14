@@ -38,7 +38,7 @@ Hito 3 = etapas 8 y 9 · Hito 4 = etapas 10 a 12.
 
 Pruebo yo: que `docs/` tenga los dos archivos y que el repo esté en GitHub.
 
-## [ ] Etapa 1 — Plan sin código (usar Opus)
+## [x] Etapa 1 — Plan sin código (usar Opus)
 
 Leé CLAUDE.md y docs/requerimientos.md completos. Todavía no escribas código.
 Proponeme la estructura de carpetas del proyecto, dónde va cada capa de la
