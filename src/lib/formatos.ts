@@ -93,3 +93,46 @@ export function inicioDelDiaSiguiente(dia: string): string {
   fecha.setUTCDate(fecha.getUTCDate() + 1);
   return fecha.toISOString().replace(".000Z", "Z");
 }
+
+// El día de hoy en Argentina como "2026-11-14". El tablero cuenta "hoy" y "el mes" con
+// el calendario argentino, no con el de UTC (a las 22:00 de allá ya es el día siguiente en UTC).
+export function hoyEnArgentina(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: ZONA_ARGENTINA }).format(new Date());
+}
+
+// "2026-11-14" + 3 → "2026-11-17". Son días de calendario: no depende de ninguna zona horaria.
+export function sumarDias(dia: string, dias: number): string {
+  const fecha = new Date(`${dia}T00:00:00Z`);
+  fecha.setUTCDate(fecha.getUTCDate() + dias);
+  return fecha.toISOString().slice(0, 10);
+}
+
+// "2026-11-14" → "14/11". Para los ejes de los gráficos.
+export function formatearDia(dia: string): string {
+  const [, mes, numero] = dia.split("-");
+  return `${numero}/${mes}`;
+}
+
+// 1234550 → "$ 12 mil"; 150000000 → "$ 1,5 M". Importes cortos para los ejes de los gráficos.
+export function formatearMonedaCorta(centavos: number): string {
+  const pesos = centavos / 100;
+  const corto = (numero: number) => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 1 }).format(numero);
+  if (pesos >= 1_000_000) return `$ ${corto(pesos / 1_000_000)} M`;
+  if (pesos >= 1_000) return `$ ${corto(pesos / 1_000)} mil`;
+  return `$ ${corto(pesos)}`;
+}
+
+// "noviembre de 2026": el mes en curso, en hora de Argentina.
+export function mesActual(): string {
+  return new Intl.DateTimeFormat("es-AR", { timeZone: ZONA_ARGENTINA, month: "long", year: "numeric" }).format(new Date());
+}
+
+// "sábado, 14 de noviembre": la fecha de hoy, en hora de Argentina.
+export function fechaDeHoyLarga(): string {
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: ZONA_ARGENTINA,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date());
+}

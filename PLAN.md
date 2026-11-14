@@ -148,7 +148,7 @@ facturas; no repitas reglas en la interfaz más allá de adelantar validaciones.
 Pruebo yo: la demo de la defensa (consumidor final en efectivo, cliente nuevo en
 cuenta corriente, pago, anulación), mirando stock y saldo después de cada paso.
 
-## [ ] Etapa 10 — Tablero
+## [x] Etapa 10 — Tablero
 
 Implementá el tablero de inicio: RF-T1 a RF-T3 y el endpoint de la sección
 11.7, con Chart.js y react-chartjs-2.

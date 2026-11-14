@@ -31,7 +31,7 @@ export async function crearUsuarioDePrueba(rol: UsuarioAutenticado["rol"]): Prom
 // Un producto creado por el servicio real, con su stock inicial como ingreso.
 export async function crearProductoDePrueba(
   admin: UsuarioAutenticado,
-  { existencia = 10, precio = 100000 }: { existencia?: number; precio?: number } = {},
+  { existencia = 10, precio = 100000, stockMinimo = 0 }: { existencia?: number; precio?: number; stockMinimo?: number } = {},
 ) {
   const categoria = await crearCategoria(admin, { nombre: `Categoría ${azar()}` });
   return crearProducto(admin, {
@@ -39,7 +39,7 @@ export async function crearProductoDePrueba(
     descripcion: `Producto ${azar()}`,
     categoriaId: categoria.id,
     precio,
-    stockMinimo: 0,
+    stockMinimo,
     stockInicial: existencia,
   });
 }

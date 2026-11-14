@@ -338,3 +338,32 @@ total. La factura no se borra (regla 5) y conserva su número.
     responde 403 (lo prueba `pruebas/permisos.test.ts`).
 - Un cambio chico para practicar: mostrar en el comprobante el nombre del medio de la tarjeta en mayúsculas,
   o agregar un atajo F6 para "Descartar venta".
+
+## Etapa 10 — Tablero
+- Qué se hizo: la pantalla de inicio con los indicadores (RF-T1), los gráficos (RF-T2) y los 5 productos
+  más vendidos (RF-T3), y el endpoint `GET /api/tablero` (sección 11.7). Los ven los dos roles.
+- Archivos clave:
+  - `src/servicios/tablero.ts` → `obtenerTablero()`: todo lo del inicio en una sola respuesta.
+  - `src/app/api/tablero/route.ts` → la ruta: solo llama al servicio.
+  - `src/app/(sistema)/page.tsx` → la pantalla (Server Component): llama al mismo servicio y muestra.
+  - `src/components/tablero/graficos.tsx` → los dos gráficos de Chart.js (barras y dona), con `react-chartjs-2`.
+  - `src/lib/formatos.ts` → `hoyEnArgentina()`, `sumarDias()`, `formatearMonedaCorta()` y otros formatos del tablero.
+  - `pruebas/tablero.test.ts` → 9 pruebas del tablero.
+- Flujo explicado: `obtenerTablero` hace cuatro consultas sobre `facturas` y `factura_items`, siempre
+  filtrando `estado = 'emitida'` (las anuladas no suman): cantidad e importe de hoy y del mes, importe por día de
+  los últimos 30 días, importe del mes por forma de pago y los 5 productos con más unidades. La deuda y los
+  productos bajo el mínimo NO se recalculan: se piden a `listarClientes` y `listarProductos`, así el saldo y
+  "bajo mínimo" siguen definidos en un solo lugar. La pantalla (que corre en el servidor) llama al mismo servicio y
+  le pasa los datos a los gráficos, que sí se dibujan en el navegador porque Chart.js necesita un `<canvas>`.
+- El día y el mes se cuentan en hora de Argentina: Argentina está 3 horas detrás de UTC y no cambia de horario. Para
+  filtrar un día se usa el rango `[00:00 de ese día, 00:00 del siguiente)` pasado a UTC (`inicioDelDia`), y para agrupar por
+  día se resta 3 horas a la fecha guardada: `date(fecha, '-3 hours')`. Una venta de las 23:00 de Argentina se
+  guarda como las 02:00 UTC del día siguiente, y igual cuenta en su día. Hay una prueba específica.
+- Los 30 días siempre vienen completos, con 0 en los días sin ventas, para que el gráfico no tenga huecos.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Por qué una venta anulada no aparece en el tablero? Porque todas las consultas filtran `estado = 'emitida'`.
+  - ¿Cómo sabe qué es "hoy"? Con `hoyEnArgentina()`, que usa la zona horaria de Buenos Aires, no la del servidor (Vercel corre en UTC).
+  - ¿De dónde sale el total adeudado? De `listarClientes` con `conDeuda`, que usa `calcularSaldo`: la única definición del saldo.
+  - ¿Por qué los gráficos son componentes de cliente? Chart.js dibuja en un canvas del navegador; el resto de la pantalla es de servidor.
+- Un cambio chico para practicar: mostrar los 7 días más recientes en lugar de 30 (cambiar `-29` y `length: 30` en
+  `obtenerTablero` y el texto "Últimos 30 días" de la pantalla).
