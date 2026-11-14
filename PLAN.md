@@ -107,7 +107,7 @@ docs/pantallas.html.
 Pruebo yo: leo moverStock() línea por línea e intento un egreso mayor a la
 existencia para ver qué responde.
 
-## [ ] Etapa 7 — Clientes y cuenta corriente
+## [x] Etapa 7 — Clientes y cuenta corriente
 
 Implementá clientes y cuenta corriente: RF-C1 a RF-C7, reglas 7, 8, 11 y 12, y
 los endpoints de la sección 11.5. El saldo sale de movimientos_cuenta. Los

@@ -18,8 +18,13 @@ export function CampoImporte({
   alCambiar: (centavos: number | undefined) => void;
   invalido?: boolean;
 }) {
-  // El texto se guarda aparte: mientras se escribe ("12,") todavía no es un importe válido.
-  const [texto, setTexto] = useState(valor === undefined ? "" : centavosATexto(valor));
+  // Lo que se escribió. Mientras se tipea ("12,") todavía no es un importe válido.
+  const [texto, setTexto] = useState("");
+
+  // Si el valor lo cambió otro botón (por ejemplo "Saldo total"), no coincide con lo
+  // escrito y se muestra el valor nuevo; si coincide, se respeta lo que escribió la persona.
+  const mostrado =
+    pesosACentavos(texto) === (valor ?? null) || valor === undefined ? texto : centavosATexto(valor);
 
   return (
     <div className="relative">
@@ -31,7 +36,7 @@ export function CampoImporte({
         inputMode="decimal"
         placeholder="0,00"
         className="pl-6 text-right"
-        value={texto}
+        value={mostrado}
         aria-invalid={invalido}
         onChange={(e) => {
           setTexto(e.target.value);

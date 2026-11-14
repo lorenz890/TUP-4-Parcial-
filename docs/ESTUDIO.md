@@ -217,3 +217,34 @@
 - Un cambio chico para practicar: pedir que el precio de un producto sea mayor a cero
   (hoy se acepta $ 0): se cambia en un solo lugar, `campoPrecio` en `esquemas/productos.ts`,
   y vale para el formulario y para la API.
+
+## Etapa 7 — Clientes y cuenta corriente
+- Qué se hizo: clientes con alta, edición y baja lógica, cuenta corriente con el saldo
+  calculado, pagos con recibo numerado y los endpoints de la sección 11.5 (RF-C1 a RF-C7,
+  reglas 7, 8, 11 y 12). Pantallas: listado, ficha con dos pestañas, saldos y recibo imprimible.
+  Todavía no hay facturas: el lugar de los débitos queda listo, pero nada los graba.
+- Archivos clave:
+  - `src/servicios/clientes.ts` → clientes y `calcularSaldo()`, la única definición del saldo; también la cuenta corriente.
+  - `src/servicios/pagos.ts` → `registrarPago()` y el recibo.
+  - `src/esquemas/clientes.ts`, `pagos.ts` → los esquemas de Zod (documento, límite, importe, medio).
+  - `src/app/api/clientes/**`, `pagos/` → las rutas: solo llaman al servicio.
+  - `src/app/(sistema)/clientes/**` → las pantallas; `src/components/clientes/` → diálogos, filtros y tabla de cuenta.
+  - `src/lib/comercio.ts` → datos fijos del comercio para los comprobantes.
+- Flujo explicado: el saldo de un cliente NO está guardado en ninguna columna: es la suma de
+  los débitos menos los créditos de `movimientos_cuenta` (`calcularSaldo`). Cuando se registra
+  un pago, `registrarPago` abre una transacción y adentro hace todo: busca al cliente, verifica que
+  tenga la cuenta corriente habilitada, calcula el saldo y rechaza el pago si es mayor
+  (regla 8), toma el próximo número de recibo, graba el pago y graba el crédito en la
+  cuenta. Como todo ocurre en una sola transacción, o se graba todo o nada. Calcular el
+  saldo adentro de la transacción es lo que evita que dos pagos simultáneos se pasen de la deuda.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Dónde se calcula el saldo? En `calcularSaldo()` de `servicios/clientes.ts`. Los listados usan
+    la misma fórmula, armada una sola vez en `sumaDeMovimientos()`.
+  - ¿Dónde se rechaza un pago mayor a la deuda? En `registrarPago()` de `servicios/pagos.ts`
+    (error 422 `PAGO_SUPERA_DEUDA`), después de calcular el saldo dentro de la transacción.
+  - ¿Por qué no se puede dar de baja un cliente con saldo? Para no perder de vista una deuda:
+    `editarCliente()` responde 422 `SALDO_PENDIENTE` si el saldo no es cero.
+  - ¿Cómo evitan dos recibos con el mismo número? El número se toma dentro de la transacción
+    ("el último + 1") y la tabla tiene un índice único por punto de venta y número.
+- Un cambio chico para practicar: pedir que el teléfono de un cliente tenga al menos 6
+  dígitos cuando se carga. Va en `esquemas/clientes.ts` y vale para el formulario y la API.

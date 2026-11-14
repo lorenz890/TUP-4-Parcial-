@@ -50,7 +50,7 @@
     │   │   ├── page.tsx       ← tablero (/)
     │   │   ├── ventas/        ← page.tsx, nueva/page.tsx, [id]/page.tsx
     │   │   ├── productos/     ← page.tsx, existencias/page.tsx (pestaña), [id]/page.tsx, categorias/page.tsx
-    │   │   ├── clientes/      ← page.tsx, [id]/page.tsx, saldos/page.tsx
+    │   │   ├── clientes/      ← page.tsx, [id]/page.tsx, saldos/page.tsx, recibos/[id]/page.tsx
     │   │   ├── usuarios/page.tsx
     │   │   └── perfil/page.tsx
     │   └── api/               ← CAPA ADAPTADORES: las 31 rutas, igual que la sección 11.9

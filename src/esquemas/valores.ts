@@ -13,3 +13,16 @@ export const TIPOS_MOVIMIENTO_CUENTA = ["debito", "credito"] as const;
 // Motivos de los movimientos manuales de stock (sección 11.4).
 export const MOTIVOS_INGRESO = ["Reposición", "Stock inicial", "Devolución de cliente"] as const;
 export const MOTIVOS_EGRESO = ["Rotura", "Vencimiento", "Ajuste de inventario", "Uso interno"] as const;
+
+// Cómo se muestran en pantalla los valores de los campos con opciones fijas.
+export const NOMBRES_MEDIO_DE_PAGO = {
+  efectivo: "Efectivo",
+  transferencia: "Transferencia",
+  tarjeta_debito: "Tarjeta de débito",
+} as const;
+
+export const NOMBRES_FORMA_DE_PAGO = {
+  contado: "Contado",
+  tarjeta: "Tarjeta",
+  cuenta_corriente: "Cuenta corriente",
+} as const;
