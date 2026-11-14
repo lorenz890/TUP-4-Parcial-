@@ -305,3 +305,36 @@ total. La factura no se borra (regla 5) y conserva su número.
     con consultas directas después de una tanda de ventas, anulaciones, pagos y operaciones que fallan.
 - Un cambio chico para practicar: pedir que una venta de contado tenga un total mínimo de $ 100 (rechazo
   con 422). Va en el paso 5 de `confirmarFactura()`.
+
+## Etapa 9 — Pantallas de ventas
+- Qué se hizo: el módulo Ventas: nueva venta operable con teclado (RF-V1 a RF-V5), comprobante
+  imprimible (RF-V7), listado de facturas con filtros y paginado (RF-V8) y anulación con confirmación
+  (RF-V9). La pantalla consume la API de facturas de la etapa 8 y no repite reglas de negocio.
+- Archivos clave:
+  - `src/components/ventas/nueva-venta.tsx` → la pantalla de venta: guarda el estado (comprador, renglones, forma de pago), arma el pedido y lo manda a `POST /api/facturas`.
+  - `busqueda-productos.tsx`, `seleccion-comprador.tsx` → buscadores en vivo (usan `GET /api/productos` y `GET /api/clientes` mediante `hooks/use-busqueda.ts`).
+  - `renglones-venta.tsx`, `panel-pago.tsx` → la tabla de renglones y las tres formas de pago.
+  - `acciones-factura.tsx` → el botón "Anular" y su diálogo con el motivo obligatorio.
+  - `src/app/(sistema)/ventas/` → `page.tsx` (listado), `nueva/page.tsx`, `[id]/page.tsx` (comprobante).
+  - `src/components/clientes/dialogo-cliente.tsx` → ahora es reutilizable: avisa qué cliente creó (`alCrear`) para el alta rápida.
+- Flujo explicado: la venta vive en el estado de un componente de cliente. Buscar un producto llama a la API;
+  Enter lo agrega (si ya estaba, suma la cantidad sin pasar la existencia). El total se recalcula en cada cambio con los
+  precios que llegaron de la API. Al confirmar, primero se valida el pedido con el MISMO esquema de Zod que usa el
+  servidor (`esquemaCrearFactura`); si pasa, se manda a `POST /api/facturas`. Ahí el servidor repite todas las
+  verificaciones y manda los precios y el stock reales. Si todo sale bien, la pantalla va al comprobante; si el
+  servidor rechaza algo (por ejemplo, ya no alcanza el stock), muestra el motivo y actualiza lo disponible.
+- Qué adelanta la pantalla y qué decide el servidor: la pantalla adelanta la existencia disponible, el monto recibido
+  y el límite de crédito para avisar antes de enviar. Nada de eso es una regla: el servidor lo verifica igual y
+  tiene la última palabra (`confirmarFactura`).
+- Teclado: F2 (buscar producto), F4 (buscar cliente), F8 (ir al pago), F9 (confirmar); en el buscador, ↑ ↓ eligen,
+  Enter agrega, y Enter con el cuadro vacío pasa al pago; Enter en un campo de pago confirma.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Dónde se calcula el total real? En el servidor (`confirmarFactura`, paso 4). El de la pantalla es solo informativo.
+  - ¿Qué pasa si dos vendedores venden la última unidad? La pantalla del que llegó segundo recibe el 409 y muestra
+    "No alcanza la existencia"; no se graba nada.
+  - ¿Por qué el alta de cliente no pierde la venta? El modal es otro formulario y no recarga la pantalla:
+    devuelve el cliente creado (`alCrear`) y la venta sigue en el estado del componente.
+  - ¿Cómo evita que un vendedor anule? El botón no se muestra, pero lo que vale es el servicio: `anularFactura`
+    responde 403 (lo prueba `pruebas/permisos.test.ts`).
+- Un cambio chico para practicar: mostrar en el comprobante el nombre del medio de la tarjeta en mayúsculas,
+  o agregar un atajo F6 para "Descartar venta".

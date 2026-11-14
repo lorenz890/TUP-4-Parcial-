@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutDashboard, Package, UserRound, Users } from "lucide-react";
+import { LayoutDashboard, Package, Plus, Receipt, UserRound, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Pila, Texto } from "@/components/maquetacion";
@@ -10,6 +10,7 @@ import type { UsuarioAutenticado } from "@/lib/permisos";
 // Por ahora solo los módulos que existen; se suman uno por etapa.
 const modulos = [
   { nombre: "Inicio", ruta: "/", icono: LayoutDashboard, soloAdmin: false },
+  { nombre: "Ventas", ruta: "/ventas", icono: Receipt, soloAdmin: false },
   { nombre: "Productos", ruta: "/productos", icono: Package, soloAdmin: false },
   { nombre: "Clientes", ruta: "/clientes", icono: UserRound, soloAdmin: false },
   { nombre: "Usuarios", ruta: "/usuarios", icono: Users, soloAdmin: true },
@@ -29,10 +30,22 @@ export function PanelLateral({
   return (
     <Pila className="gap-1 p-3">
       <Texto className="px-3 pb-3 text-lg font-semibold">Gestión comercial</Texto>
+      <Link
+        href="/ventas/nueva"
+        onClick={alNavegar}
+        className="mb-2 flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+      >
+        <Plus className="size-4" />
+        Nueva venta
+      </Link>
       {modulos
         .filter((modulo) => !modulo.soloAdmin || rol === "admin")
         .map(({ nombre, ruta, icono: Icono }) => {
-          const activo = ruta === "/" ? rutaActual === "/" : rutaActual.startsWith(ruta);
+          // "Nueva venta" tiene su propio botón arriba: no resalta también a "Ventas".
+          const activo =
+            ruta === "/"
+              ? rutaActual === "/"
+              : rutaActual.startsWith(ruta) && rutaActual !== "/ventas/nueva";
           return (
             <Link
               key={ruta}

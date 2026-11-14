@@ -137,7 +137,7 @@ En docs/ESTUDIO.md explicá la confirmación paso por paso, numerada.
 Pruebo yo: leo la función de confirmación entera y corro las pruebas. Si no
 pasan, se arreglan antes de seguir. Esta es la parte más preguntada.
 
-## [ ] Etapa 9 — Pantallas de ventas
+## [x] Etapa 9 — Pantallas de ventas
 
 Hacé el módulo Ventas de la sección 4 según docs/pantallas.html: nueva venta
 (RF-V1 a RF-V4, operable con teclado, alta de cliente en un modal sin perder la

@@ -50,7 +50,7 @@
     │   ├── (sistema)/         ← grupo de rutas con panel lateral + barra superior
     │   │   ├── layout.tsx     ← barrera 2: busca el usuario; si no hay, /login
     │   │   ├── page.tsx       ← tablero (/)
-    │   │   ├── ventas/        ← page.tsx, nueva/page.tsx, [id]/page.tsx
+    │   │   ├── ventas/        ← page.tsx (facturas), nueva/page.tsx, [id]/page.tsx (comprobante)
     │   │   ├── productos/     ← page.tsx, existencias/page.tsx (pestaña), [id]/page.tsx, categorias/page.tsx
     │   │   ├── clientes/      ← page.tsx, [id]/page.tsx, saldos/page.tsx, recibos/[id]/page.tsx
     │   │   ├── usuarios/page.tsx

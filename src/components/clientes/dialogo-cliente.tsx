@@ -42,10 +42,14 @@ export function DialogoCliente({
   abierto,
   alCambiar,
   cliente,
+  alCrear,
 }: {
   abierto: boolean;
   alCambiar: (abierto: boolean) => void;
   cliente?: FilaCliente;
+  // Si se pasa, se llama con el cliente recién creado. Lo usa Nueva venta: el alta rápida
+  // no recarga la pantalla, así la venta en curso no se pierde.
+  alCrear?: (cliente: FilaCliente) => void;
 }) {
   return (
     <Dialog open={abierto} onOpenChange={alCambiar}>
@@ -57,13 +61,21 @@ export function DialogoCliente({
           </DialogDescription>
         </DialogHeader>
         {/* El formulario vive adentro para que su estado empiece de cero cada vez que se abre. */}
-        <FormularioCliente cliente={cliente} alTerminar={() => alCambiar(false)} />
+        <FormularioCliente cliente={cliente} alCrear={alCrear} alTerminar={() => alCambiar(false)} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function FormularioCliente({ cliente, alTerminar }: { cliente?: FilaCliente; alTerminar: () => void }) {
+function FormularioCliente({
+  cliente,
+  alCrear,
+  alTerminar,
+}: {
+  cliente?: FilaCliente;
+  alCrear?: (cliente: FilaCliente) => void;
+  alTerminar: () => void;
+}) {
   const router = useRouter();
 
   const { valores, errores, enviando, cambiar, alEnviar } = useFormulario({
@@ -80,10 +92,11 @@ function FormularioCliente({ cliente, alTerminar }: { cliente?: FilaCliente; alT
     },
     enviar: (datos) =>
       cliente ? editarClienteAccion({ id: cliente.id, datos }) : crearClienteAccion(datos),
-    alExito: () => {
+    alExito: (guardado) => {
       toast.success(cliente ? "Cliente actualizado." : "Cliente creado.");
       alTerminar();
-      router.refresh();
+      if (alCrear) alCrear(guardado);
+      else router.refresh();
     },
   });
 
