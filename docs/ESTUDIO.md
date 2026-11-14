@@ -87,3 +87,31 @@
     filtrar detalles internos; el detalle va al log del servidor.
 - Un cambio chico para practicar: agregar a `formatos.ts` una función que
   muestre un teléfono, o cambiar el prefijo de moneda de `$ ` a `ARS `.
+
+## Etapa 3 — Esquema de datos
+- Qué se hizo: se definieron con Drizzle las 9 tablas de la sección 7, con
+  importes en centavos, claves únicas y claves foráneas. Se generó la primera
+  migración con drizzle-kit y el seed crea el primer administrador (RF-U3).
+- Archivos clave:
+  - `src/db/esquema.ts` → las 9 tablas, y las listas de valores permitidos (roles, formas de pago, etc.) que después comparten los esquemas de Zod.
+  - `migraciones/0000_esquema_inicial.sql` → el SQL que genera drizzle-kit; se aplica con `db:migrate` y no se edita a mano.
+  - `src/db/seed.ts` → crea el primer administrador leyendo `ADMIN_EMAIL` y `ADMIN_PASSWORD` del entorno.
+  - `.env.example` → ahora también lista las variables del administrador.
+- Flujo explicado: cambiar una tabla es siempre lo mismo: se edita
+  `esquema.ts`, se corre `pnpm run db:generate` (drizzle-kit compara el esquema
+  con la última foto y escribe el SQL de la diferencia) y después
+  `pnpm run db:migrate` lo aplica a la base elegida (local o Turso). El seed
+  mira si el administrador ya existe, y si no, guarda su contraseña con bcrypt
+  (nunca en texto plano). Las reglas más importantes ya quedan protegidas por la
+  propia base: el código de producto y el documento del cliente son únicos, el
+  número de factura no se puede repetir, y la existencia no puede ser negativa
+  (CHECK). El saldo del cliente NO es una columna: sale de `movimientos_cuenta`.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Por qué los importes son enteros? Para no tener errores de redondeo del
+    punto flotante: `1250000` son $ 12.500,00 y solo `formatos.ts` los convierte.
+  - ¿Cómo evita la base vender stock que no hay? Con el CHECK `existencia >= 0`
+    como última red, y además `moverStock()` descuenta con `WHERE existencia >= ?`.
+  - ¿Por qué `factura_items` copia la descripción y el precio? Por la regla 3:
+    si después cambia el precio del catálogo, las facturas viejas no cambian.
+- Un cambio chico para practicar: agregar el campo `observaciones` (texto
+  opcional) a `productos`: editar `esquema.ts`, correr `db:generate` y `db:migrate`.

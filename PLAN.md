@@ -65,7 +65,7 @@ Todavía no hagas tablas, pantallas ni funcionalidad.
 Pruebo yo: que `pnpm run dev` levante, y dónde decide si usar la base local o
 Turso.
 
-## [ ] Etapa 3 — Esquema de datos
+## [x] Etapa 3 — Esquema de datos
 
 Definí con Drizzle las 9 tablas de la sección 7, con importes en centavos
 enteros, claves únicas y relaciones. Generá la migración con drizzle-kit.
