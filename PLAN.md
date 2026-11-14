@@ -86,7 +86,7 @@ Interfaz: /login, el layout con panel lateral y barra superior de la sección 4
 Pruebo yo: entro como admin, creo un vendedor y pruebo que el vendedor no pueda
 abrir /usuarios ni llamar a /api/usuarios.
 
-## [ ] Etapa 5 — Publicar en Vercel + Turso
+## [x] Etapa 5 — Publicar en Vercel + Turso
 
 Guiame paso a paso, comandos de a uno: crear la base en Turso
 (`gestion-comercial`), obtener URL y token, importar el repo en Vercel, cargar
