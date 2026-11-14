@@ -50,3 +50,40 @@
     sistema (usuario válido en la base) y el servicio (rol → `403`).
 - Un cambio chico para practicar: decidir en qué archivo iría una regla nueva,
   como «un producto no puede costar $ 0», y por qué ahí y no en la pantalla.
+
+## Etapa 2 — Proyecto base
+- Qué se hizo: se creó el proyecto Next.js (App Router, TypeScript, Tailwind) con
+  shadcn/ui, Drizzle, libSQL y Zod. Se dejaron listas la conexión a la base, los
+  scripts de la sección 9 y las tres piezas comunes: `ApiError`, el envoltorio
+  de rutas y el módulo de formatos. Todavía no hay tablas ni pantallas.
+- Archivos clave:
+  - `src/db/conexion.ts` → decide si se usa SQLite local o Turso, y exporta `db`.
+  - `drizzle.config.ts` → lo mismo para drizzle-kit (migraciones).
+  - `src/db/esquema.ts` → vacío hasta la etapa 3, donde van las 9 tablas.
+  - `src/db/seed.ts` → provisorio; en la etapa 3 crea el primer administrador.
+  - `src/lib/api-error.ts` → clase `ApiError`, los códigos de la sección 11.8 y
+    `aApiError()`, que convierte cualquier error al formato estándar.
+  - `src/lib/ruta.ts` → envoltorio de los Route Handlers (sección 10.3).
+  - `src/lib/formatos.ts` → único módulo de formatos (moneda, fechas, documento, numeración).
+  - `.env.example` → nombres de las variables, sin valores.
+  - `pnpm-workspace.yaml` → aprueba el script de instalación de `esbuild`.
+  - `components.json`, `src/lib/utils.ts`, `src/components/ui/button.tsx` → los genera shadcn/ui.
+- Flujo explicado: al arrancar, `conexion.ts` mira las variables de entorno. Si
+  están `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` se conecta a Turso; si falta
+  alguna usa el archivo `local.db`. Eso hace que el mismo código sirva en la
+  máquina y en Vercel. Cuando llega un pedido a la API, `ruta()` lee los
+  parámetros y el JSON, llama a la función que le pasamos (después será un
+  servicio) y arma la respuesta. Si algo lanza un error, `aApiError()` lo
+  convierte: un `ApiError` sale tal cual, un error de Zod pasa a `422 VALIDACION`
+  con el detalle por campo, y cualquier otra cosa pasa a `500` sin mostrar el
+  detalle al cliente (queda en el log del servidor). Los importes viajan siempre
+  en centavos y solo `formatos.ts` los convierte en `$ 12.345,50`.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Dónde decide la app si usa Turso o SQLite? En `src/db/conexion.ts`, con la
+    constante `usaTurso`. `drizzle.config.ts` repite la misma regla para las migraciones.
+  - ¿Por qué los servicios no devuelven respuestas HTTP? Porque lanzan `ApiError`
+    y quien responde es el adaptador. Así el mismo servicio sirve a la API y a las Server Actions.
+  - ¿Por qué un error inesperado dice solo «Ocurrió un error inesperado»? Para no
+    filtrar detalles internos; el detalle va al log del servidor.
+- Un cambio chico para practicar: agregar a `formatos.ts` una función que
+  muestre un teléfono, o cambiar el prefijo de moneda de `$ ` a `ARS `.

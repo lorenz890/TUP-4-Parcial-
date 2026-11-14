@@ -50,7 +50,7 @@ acordada en docs/ESTRUCTURA.md.
 Pruebo yo: que la estructura respete las cuatro capas y que la entienda. Si algo
 no me cierra, lo cambiamos ahora.
 
-## [ ] Etapa 2 — Proyecto base
+## [x] Etapa 2 — Proyecto base
 
 Creá el proyecto según docs/ESTRUCTURA.md: Next.js con App Router y TypeScript,
 Tailwind, shadcn/ui, Drizzle con @libsql/client y Zod, con pnpm. La conexión usa
