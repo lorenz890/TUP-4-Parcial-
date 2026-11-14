@@ -93,7 +93,7 @@
   importes en centavos, claves únicas y claves foráneas. Se generó la primera
   migración con drizzle-kit y el seed crea el primer administrador (RF-U3).
 - Archivos clave:
-  - `src/db/esquema.ts` → las 9 tablas, y las listas de valores permitidos (roles, formas de pago, etc.) que después comparten los esquemas de Zod.
+  - `src/db/esquema.ts` → las 9 tablas. Las listas de valores permitidos (roles, formas de pago, etc.) viven en `src/esquemas/valores.ts` y las usan tanto la base como los esquemas de Zod.
   - `migraciones/0000_esquema_inicial.sql` → el SQL que genera drizzle-kit; se aplica con `db:migrate` y no se edita a mano.
   - `src/db/seed.ts` → crea el primer administrador leyendo `ADMIN_EMAIL` y `ADMIN_PASSWORD` del entorno.
   - `.env.example` → ahora también lista las variables del administrador.
@@ -115,3 +115,43 @@
     si después cambia el precio del catálogo, las facturas viejas no cambian.
 - Un cambio chico para practicar: agregar el campo `observaciones` (texto
   opcional) a `productos`: editar `esquema.ts`, correr `db:generate` y `db:migrate`.
+
+## Etapa 4 — Sesión, usuarios y estructura
+- Qué se hizo: login con cookie propia firmada, las tres barreras de la sección
+  10.5, los 7 endpoints de la 11.3 (login, logout, me, cambio de contraseña y
+  gestión de usuarios) y las pantallas `/login`, `/usuarios` y `/perfil` dentro
+  de un layout con panel lateral y barra superior (se colapsa en el celular).
+- Archivos clave:
+  - `src/lib/cookie-sesion.ts` → arma y verifica la cookie `id.vencimiento.firma` (HMAC con `SESSION_SECRET`). No toca la base.
+  - `src/lib/sesion.ts` → abre y cierra la cookie, y `usuarioActual()` busca al usuario en la base en cada pedido.
+  - `src/proxy.ts` → barrera 1: sin cookie válida redirige a `/login` (o responde 401 en `/api`).
+  - `src/app/(sistema)/layout.tsx` → barrera 2: si no hay usuario válido, vuelve al login; y arma el panel lateral y la barra superior.
+  - `src/lib/permisos.ts` → `exigirAdmin()`, barrera 3: cada servicio la llama y responde 403.
+  - `src/esquemas/auth.ts`, `usuarios.ts`, `comunes.ts` → los esquemas de Zod, compartidos por el servidor y los formularios.
+  - `src/servicios/auth.ts`, `usuarios.ts` → las reglas (credenciales, email repetido, admin sobre sí mismo, contraseñas).
+  - `src/lib/ruta.ts` y `src/lib/accion.ts` → envoltorios: exigen la sesión y convierten los errores (rutas y Server Actions).
+  - `src/app/api/auth/**` y `src/app/api/usuarios/**` → las rutas: solo llaman al servicio.
+  - `src/acciones/auth.ts`, `usuarios.ts` → Server Actions de los formularios; llaman a los mismos servicios.
+  - `src/hooks/use-formulario.ts` → errores por campo y estado de envío de todos los formularios.
+- Flujo explicado: el usuario entra con email y contraseña. El servicio
+  `iniciarSesion` busca el email, compara el hash con bcrypt y devuelve el
+  usuario; el adaptador (ruta o acción) abre la cookie firmada. Por la cookie
+  viaja solo el id, la fecha de vencimiento y la firma. En cada pedido pasa por
+  tres controles. 1) El proxy verifica la firma: sin cookie válida, a `/login`.
+  2) La página o la ruta llama a `usuarioActual()`, que busca el usuario en la
+  base: si está desactivado o no existe, no entra, aunque tenga cookie.
+  3) El servicio llama a `exigirAdmin()`: un vendedor recibe `403` aunque llame
+  a la API directo. Los formularios validan con el mismo esquema de Zod que el
+  servidor (`esquemas/`), así los mensajes coinciden.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Qué pasa si desactivo a un usuario que está conectado? Pierde el acceso en
+    su próximo pedido, porque `usuarioActual()` consulta la base cada vez.
+  - ¿Se puede falsificar la cookie? No: lleva una firma HMAC con `SESSION_SECRET`.
+    Si alguien cambia el id, la firma ya no coincide y se rechaza.
+  - ¿Dónde está la regla «un admin no puede desactivarse a sí mismo»? En
+    `editarUsuario()` de `servicios/usuarios.ts`. El botón oculto en la pantalla es solo ayuda visual.
+  - ¿Por qué el login dice lo mismo si el email no existe o la clave está mal?
+    Para no revelar qué emails están registrados.
+- Un cambio chico para practicar: pedir al menos 10 caracteres en las
+  contraseñas nuevas (se cambia en un solo lugar, `campoContrasenaNueva` en
+  `esquemas/auth.ts`), o agregar un tercer rol.

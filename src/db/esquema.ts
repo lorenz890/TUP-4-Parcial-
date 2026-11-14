@@ -11,16 +11,17 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+import {
+  ESTADOS_FACTURA,
+  FORMAS_DE_PAGO,
+  MEDIOS_DE_PAGO,
+  ROLES,
+  TIPOS_DOCUMENTO,
+  TIPOS_MOVIMIENTO_CUENTA,
+  TIPOS_MOVIMIENTO_STOCK,
+  TIPOS_TARJETA,
+} from "../esquemas/valores";
 
-// Valores permitidos, exportados para que los esquemas de zod usen los mismos.
-export const ROLES = ["admin", "vendedor"] as const;
-export const TIPOS_DOCUMENTO = ["DNI", "CUIT"] as const;
-export const TIPOS_MOVIMIENTO_STOCK = ["venta", "anulacion", "ingreso", "egreso"] as const;
-export const FORMAS_DE_PAGO = ["contado", "tarjeta", "cuenta_corriente"] as const;
-export const TIPOS_TARJETA = ["debito", "credito"] as const;
-export const ESTADOS_FACTURA = ["emitida", "anulada"] as const;
-export const MEDIOS_DE_PAGO = ["efectivo", "transferencia", "tarjeta_debito"] as const;
-export const TIPOS_MOVIMIENTO_CUENTA = ["debito", "credito"] as const;
 
 // Fecha de creación: la completa la base al insertar, así ninguna tabla la olvida.
 // Es una función (y no una constante) porque cada tabla necesita su propia columna.

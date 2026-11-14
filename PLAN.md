@@ -75,7 +75,7 @@ email y contraseña de variables de entorno.
 Pruebo yo: el archivo del esquema tabla por tabla, la carpeta de migraciones, y
 que `pnpm run db:migrate` y `pnpm run db:seed` funcionen.
 
-## [ ] Etapa 4 — Sesión, usuarios y estructura
+## [x] Etapa 4 — Sesión, usuarios y estructura
 
 Implementá usuarios y acceso: RF-U1 a RF-U5, la sección 10.5 (las tres
 barreras, y el usuario buscado en la base en cada pedido) y los endpoints de la

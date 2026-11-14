@@ -18,6 +18,7 @@
     │   └── seed.ts            ← datos iniciales (usa los servicios, sección 10.7)
     │
     ├── esquemas/              ← ESQUEMAS ZOD (compartidos formulario ↔ servidor)
+    │   ├── comunes.ts  valores.ts   ← id y paginación; listas de valores permitidos
     │   ├── auth.ts  usuarios.ts  categorias.ts  productos.ts  stock.ts
     │   └── clientes.ts  pagos.ts  facturas.ts
     │
@@ -32,7 +33,9 @@
     │   ├── api-error.ts       ← clase ApiError + códigos de la sección 11.8
     │   ├── ruta.ts            ← envoltorio de Route Handlers (sección 10.3)
     │   ├── accion.ts          ← envoltorio de Server Actions (sección 10.3)
-    │   ├── sesion.ts          ← firmar/leer la cookie y buscar el usuario en la base
+    │   ├── cookie-sesion.ts   ← firmar y verificar la cookie (sin base: también la usa el proxy)
+    │   ├── sesion.ts          ← abrir/cerrar la cookie y buscar el usuario en la base
+    │   ├── permisos.ts        ← tipo UsuarioAutenticado y exigirAdmin()
     │   ├── formatos.ts        ← moneda, fecha, hora AR, documento, numeración
     │   └── comercio.ts        ← datos fijos del comercio para comprobante y recibo
     │
@@ -54,14 +57,15 @@
     │
     ├── components/            ← CAPA INTERFAZ
     │   ├── ui/                ← componentes de shadcn/ui (los genera shadcn)
-    │   ├── maquetacion/       ← Pila, Fila, Grilla, Texto, Titulo (sección 10.6)
+    │   ├── maquetacion.tsx    ← Pila, Fila, Texto, Titulo (Grilla cuando haga falta)
     │   ├── comunes/           ← encabezado de página, estados carga/vacío/error,
     │   │                         confirmar acción, campo, campo de importe,
     │   │                         insignia de estado, paginador
     │   └── ventas/ productos/ clientes/ usuarios/ tablero/   ← componentes del dominio
     │
     └── hooks/
-        └── usar-formulario.ts ← errores por campo, estado de envío y aviso (sección 10.6)
+        └── use-formulario.ts  ← errores por campo y estado de envío (sección 10.6).
+                                 Lleva el prefijo "use" porque React lo exige para los hooks.
 ```
 
 ## 2. Las cuatro capas (sección 10.1)
@@ -95,7 +99,7 @@ Ejemplo con productos. Para cualquier otro módulo se cambia la palabra `product
 | Envoltorio de Server Actions | `src/lib/accion.ts` | Igual, pero devuelve `{ ok, data }` o `{ ok: false, error }`. |
 | Formatos | `src/lib/formatos.ts` | `$ 12.345,50`, `dd/mm/aaaa`, hora de Argentina, documento, `0001-00000001`. También pasa un día `AAAA-MM-DD` de Argentina a rango UTC para los filtros. |
 | Saldo del cliente | `src/servicios/clientes.ts` | Siempre calculado: suma de débitos − créditos de `movimientos_cuenta`. No hay columna `saldo`. |
-| Sesión | `src/lib/sesion.ts` | Cookie `httpOnly` firmada con HMAC (`node:crypto`), y el usuario se busca en la base en cada pedido. |
+| Sesión | `src/lib/cookie-sesion.ts` y `src/lib/sesion.ts` | Cookie `httpOnly` firmada con HMAC (`node:crypto`); `usuarioActual()` busca el usuario en la base en cada pedido. |
 
 ## 5. Las tres barreras de seguridad (sección 10.5)
 

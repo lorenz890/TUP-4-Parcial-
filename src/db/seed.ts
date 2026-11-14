@@ -6,7 +6,7 @@ import { db } from "./conexion";
 import { usuarios } from "./esquema";
 
 async function crearPrimerAdministrador() {
-  const email = process.env.ADMIN_EMAIL;
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const contrasena = process.env.ADMIN_PASSWORD;
 
   // El correo y la clave vienen del entorno para que no queden escritos en el código.
