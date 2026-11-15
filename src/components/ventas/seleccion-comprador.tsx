@@ -30,7 +30,7 @@ export function SeleccionComprador({
   const [texto, setTexto] = useState("");
   const [indice, setIndice] = useState(0);
   const [creando, setCreando] = useState(false);
-  const { filas, actualizada } = useBusqueda<FilaCliente>("/api/clientes", texto);
+  const { filas, actualizada, error } = useBusqueda<FilaCliente>("/api/clientes", texto);
 
   function elegir(elegido: FilaCliente) {
     alCambiar(elegido);
@@ -153,7 +153,18 @@ export function SeleccionComprador({
                 ))}
               </ul>
             )}
-            {texto.trim() !== "" && actualizada && filas.length === 0 && (
+            {/* Estados de la sección 8: buscando, error y vacío. */}
+            {texto.trim() !== "" && !actualizada && filas.length === 0 && (
+              <p className="absolute z-20 mt-1 w-full rounded-lg border bg-popover px-3 py-2 text-sm text-muted-foreground shadow-md">
+                Buscando…
+              </p>
+            )}
+            {texto.trim() !== "" && error && (
+              <p role="alert" className="absolute z-20 mt-1 w-full rounded-lg border border-red-200 bg-popover px-3 py-2 text-sm text-red-600 shadow-md">
+                {error}
+              </p>
+            )}
+            {texto.trim() !== "" && actualizada && !error && filas.length === 0 && (
               <p className="absolute z-20 mt-1 w-full rounded-lg border bg-popover px-3 py-2 text-sm text-muted-foreground shadow-md">
                 No hay clientes que coincidan.
               </p>
