@@ -4,7 +4,7 @@ import { FiltrosClientes } from "@/components/clientes/filtros-clientes";
 import { EncabezadoPagina } from "@/components/comunes/encabezado-pagina";
 import { EstadoVacio } from "@/components/comunes/estado-vacio";
 import { Paginador } from "@/components/comunes/paginador";
-import { Pila } from "@/components/maquetacion";
+import { Fila, Pila, Texto } from "@/components/maquetacion";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -54,7 +54,10 @@ export default async function PaginaClientes({ searchParams }: PageProps<"/clien
             {clientes.data.map((cliente) => (
               <TableRow key={cliente.id}>
                 <TableCell className="whitespace-nowrap">
-                  <span className="text-xs text-muted-foreground">{cliente.tipoDoc}</span> {cliente.nroDoc}
+                  <Fila className="flex-nowrap gap-1">
+                    <Texto className="text-xs text-muted-foreground">{cliente.tipoDoc}</Texto>
+                    <Texto>{cliente.nroDoc}</Texto>
+                  </Fila>
                 </TableCell>
                 <TableCell>
                   <Link href={`/clientes/${cliente.id}`} className="font-medium hover:underline">

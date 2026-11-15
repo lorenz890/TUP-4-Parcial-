@@ -6,7 +6,7 @@ import { TablaCuenta } from "@/components/clientes/tabla-cuenta";
 import { EncabezadoPagina } from "@/components/comunes/encabezado-pagina";
 import { EstadoVacio } from "@/components/comunes/estado-vacio";
 import { Pestanas } from "@/components/comunes/pestanas";
-import { Grilla, Pila, Texto } from "@/components/maquetacion";
+import { Fila, Grilla, Pila, Texto } from "@/components/maquetacion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -109,10 +109,10 @@ export default async function FichaCliente({ params, searchParams }: PageProps<"
             <CardContent>
               <Pila className="gap-2">
                 {datos.map(({ nombre, valor }) => (
-                  <div key={nombre} className="flex justify-between gap-4 text-sm">
-                    <span className="text-muted-foreground">{nombre}</span>
-                    <span className="text-right">{valor}</span>
-                  </div>
+                  <Fila key={nombre} className="flex-nowrap items-start justify-between gap-4">
+                    <Texto className="text-muted-foreground">{nombre}</Texto>
+                    <Texto className="text-right">{valor}</Texto>
+                  </Fila>
                 ))}
               </Pila>
             </CardContent>

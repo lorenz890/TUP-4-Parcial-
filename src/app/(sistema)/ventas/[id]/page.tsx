@@ -32,17 +32,17 @@ export default async function ComprobanteFactura({ params }: PageProps<"/ventas/
 
   return (
     <Pila>
-      <div className="print:hidden">
+      <Pila className="print:hidden">
         <Link href="/ventas" className="text-sm text-muted-foreground hover:underline">
           ← Facturas
         </Link>
-      </div>
+      </Pila>
 
       <EncabezadoPagina titulo={`Factura ${factura.numeroFormateado}`}>
         <Badge variant={anulada ? "destructive" : "secondary"}>{anulada ? "Anulada" : "Emitida"}</Badge>
-        <div className="print:hidden">
+        <Pila className="print:hidden">
           {usuario.rol === "admin" && !anulada && <AccionesFactura factura={factura} />}
-        </div>
+        </Pila>
         <BotonImprimir />
       </EncabezadoPagina>
 

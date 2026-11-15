@@ -34,11 +34,11 @@ export default async function PaginaRecibo({ params }: PageProps<"/clientes/reci
 
   return (
     <Pila>
-      <div className="print:hidden">
+      <Pila className="print:hidden">
         <Link href={`/clientes/${cliente.id}?vista=cuenta`} className="text-sm text-muted-foreground hover:underline">
           ← {cliente.nombre}
         </Link>
-      </div>
+      </Pila>
       <EncabezadoPagina titulo={`Recibo ${recibo.numeroRecibo}`}>
         <BotonImprimir />
       </EncabezadoPagina>
@@ -77,15 +77,15 @@ export default async function PaginaRecibo({ params }: PageProps<"/clientes/reci
 
             <Pila className="gap-2 rounded-lg bg-muted/50 p-4">
               {renglones.map(({ nombre, valor }) => (
-                <div key={nombre} className="flex justify-between gap-4 text-sm">
-                  <span className="text-muted-foreground">{nombre}</span>
-                  <span>{valor}</span>
-                </div>
+                <Fila key={nombre} className="flex-nowrap items-start justify-between gap-4">
+                  <Texto className="text-muted-foreground">{nombre}</Texto>
+                  <Texto>{valor}</Texto>
+                </Fila>
               ))}
-              <div className="flex items-center justify-between gap-4 border-t pt-3">
-                <span className="font-medium">Importe recibido</span>
-                <span className="text-2xl font-semibold">{formatearMoneda(recibo.importe)}</span>
-              </div>
+              <Fila className="flex-nowrap justify-between gap-4 border-t pt-3">
+                <Texto className="font-medium">Importe recibido</Texto>
+                <Texto className="text-2xl font-semibold">{formatearMoneda(recibo.importe)}</Texto>
+              </Fila>
             </Pila>
 
             <Fila className="justify-end gap-2">
