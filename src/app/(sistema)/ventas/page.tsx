@@ -11,6 +11,7 @@ import { NOMBRES_FORMA_DE_PAGO } from "@/esquemas/valores";
 import { formatearFechaHora, formatearMoneda } from "@/lib/formatos";
 import { exigirUsuario } from "@/lib/sesion";
 import { cn } from "@/lib/utils";
+import { listarClientes } from "@/servicios/clientes";
 import { listarFacturas } from "@/servicios/facturas";
 import { listarUsuarios } from "@/servicios/usuarios";
 
@@ -26,12 +27,19 @@ export default async function PaginaFacturas({ searchParams }: PageProps<"/venta
     ? (await listarUsuarios(usuario, { pageSize: 100 })).data.map(({ id, nombre }) => ({ id, nombre }))
     : [{ id: usuario.id, nombre: usuario.nombre }];
 
+  // Clientes para el selector (RF-V8), también los dados de baja: sus facturas siguen existiendo.
+  // El máximo del paginado es 100, alcanza para un comercio de un solo local.
+  const clientes = (await listarClientes(usuario, { activo: "todos", pageSize: 100 })).data.map(
+    ({ id, nombre }) => ({ id, nombre }),
+  );
+
   const texto = (clave: string) => (typeof parametros[clave] === "string" ? (parametros[clave] as string) : "");
   const filtros = {
     q: texto("q"),
     desde: texto("desde"),
     hasta: texto("hasta"),
     forma: texto("forma"),
+    clienteId: texto("clienteId"),
     vendedorId: texto("vendedorId"),
     estado: texto("estado"),
   };
@@ -47,7 +55,7 @@ export default async function PaginaFacturas({ searchParams }: PageProps<"/venta
         </Link>
       </EncabezadoPagina>
 
-      <FiltrosFacturas {...filtros} vendedores={vendedores} />
+      <FiltrosFacturas {...filtros} clientes={clientes} vendedores={vendedores} />
 
       {facturas.data.length === 0 ? (
         <EstadoVacio mensaje="No hay facturas que coincidan con los filtros." />

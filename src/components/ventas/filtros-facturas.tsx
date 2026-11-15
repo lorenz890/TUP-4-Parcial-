@@ -18,16 +18,20 @@ export function FiltrosFacturas({
   desde,
   hasta,
   forma,
+  clienteId,
   vendedorId,
   estado,
+  clientes,
   vendedores,
 }: {
   q: string;
   desde: string;
   hasta: string;
   forma: string;
+  clienteId: string;
   vendedorId: string;
   estado: string;
+  clientes: { id: number; nombre: string }[];
   vendedores: { id: number; nombre: string }[];
 }) {
   const router = useRouter();
@@ -35,10 +39,15 @@ export function FiltrosFacturas({
   const [diaDesde, setDiaDesde] = useState(desde);
   const [diaHasta, setDiaHasta] = useState(hasta);
   const [formaElegida, setFormaElegida] = useState(forma || "todas");
+  const [cliente, setCliente] = useState(clienteId || "todos");
   const [vendedor, setVendedor] = useState(vendedorId || "todos");
   const [estadoElegido, setEstadoElegido] = useState(estado || "todos");
 
   const opcionesDeForma = { todas: "Todas las formas de pago", ...NOMBRES_FORMA_DE_PAGO };
+  const opcionesDeCliente = {
+    todos: "Todos los clientes",
+    ...Object.fromEntries(clientes.map((c) => [String(c.id), c.nombre])),
+  };
   const opcionesDeVendedor = {
     todos: "Todos los vendedores",
     ...Object.fromEntries(vendedores.map((v) => [String(v.id), v.nombre])),
@@ -51,6 +60,7 @@ export function FiltrosFacturas({
     if (diaDesde) parametros.set("desde", diaDesde);
     if (diaHasta) parametros.set("hasta", diaHasta);
     if (formaElegida !== "todas") parametros.set("forma", formaElegida);
+    if (cliente !== "todos") parametros.set("clienteId", cliente);
     if (vendedor !== "todos") parametros.set("vendedorId", vendedor);
     if (estadoElegido !== "todos") parametros.set("estado", estadoElegido);
     router.push(`/ventas?${parametros}`);
@@ -80,6 +90,20 @@ export function FiltrosFacturas({
             {FORMAS_DE_PAGO.map((valor) => (
               <SelectItem key={valor} value={valor}>
                 {NOMBRES_FORMA_DE_PAGO[valor]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select items={opcionesDeCliente} value={cliente} onValueChange={(v) => setCliente(v ?? "todos")}>
+          <SelectTrigger className="w-52" aria-label="Cliente">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos los clientes</SelectItem>
+            {clientes.map((c) => (
+              <SelectItem key={c.id} value={String(c.id)}>
+                {c.nombre}
               </SelectItem>
             ))}
           </SelectContent>
