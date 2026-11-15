@@ -367,3 +367,33 @@ total. La factura no se borra (regla 5) y conserva su número.
   - ¿Por qué los gráficos son componentes de cliente? Chart.js dibuja en un canvas del navegador; el resto de la pantalla es de servidor.
 - Un cambio chico para practicar: mostrar los 7 días más recientes en lugar de 30 (cambiar `-29` y `length: 30` en
   `obtenerTablero` y el texto "Últimos 30 días" de la pantalla).
+
+## Etapa 11 — Datos de prueba y README
+- Qué se hizo: `pnpm run db:seed` ahora carga los datos de prueba de la sección 8 (2 usuarios, 5 categorías, 30
+  productos, 10 clientes y 50 facturas en los últimos 30 días) y el README quedó completo con lo que pide la
+  sección 12.
+- Archivos clave:
+  - `src/db/seed.ts` → crea el administrador, el vendedor y llama a la carga de datos. Se puede correr varias veces.
+  - `src/db/datos-de-prueba.ts` → la lista de productos y clientes, el plan de ventas y la carga con los servicios.
+  - `.env.example` → ahora incluye `VENDEDOR_*` (el segundo usuario de prueba).
+  - `README.md` → integrantes, URL pública, instalación, variables, usuarios de prueba, reglas y requerimientos.
+- Flujo explicado: el seed NO inserta facturas ni stock con SQL. Primero PLANIFICA todo sin tocar la base: decide
+  las 50 ventas (productos, cantidades, forma de pago, cliente, vendedor, día y hora), cuáles se anulan y cuándo pagan
+  los clientes; con eso calcula cuánto stock inicial necesita cada producto. Después ejecuta los hechos en orden de
+  fecha usando los servicios reales: `crearProducto` (el stock inicial entra como ingreso), `confirmarFactura`,
+  `anularFactura`, `registrarPago`, `registrarMovimientoManual`. Como los servicios graban "ahora", después de cada
+  operación el seed le pone al registro su fecha pasada; al hacerlo en orden cronológico, los números de factura y de
+  recibo quedan en el mismo orden que las fechas. Los pagos se calculan en el momento: pagan entre el 30 % y el 70 %
+  de la deuda que tienen en ese instante (nunca más, regla 8). Si una venta a cuenta pasara el límite de crédito, se
+  cobra de contado para que sigan siendo 50.
+- Datos fijos: el azar usa una semilla fija, así los datos son siempre los mismos y una demo se puede repetir.
+  Los 4 productos "bajo mínimo" y los 3 días con más ventas no son casualidad: están planeados.
+- Preguntas probables del profe y su respuesta corta:
+  - ¿Cómo sabe que los datos de prueba cumplen las reglas? Porque se crean con los mismos servicios que usa la app:
+    si alguna regla no se cumpliera, el servicio rechazaría la operación y el seed fallaría.
+  - ¿Qué pasa si corro el seed dos veces? No duplica nada: ve que los usuarios existen y que ya hay productos.
+  - ¿Por qué hay que cambiar fechas a mano? Porque `confirmarFactura` graba la fecha de este instante (es lo correcto
+    en producción); el seed solo la corrige para repartir el historial.
+  - ¿Dónde están las contraseñas de prueba? En `.env.example` (solo para desarrollo). En producción se definen otras.
+- Un cambio chico para practicar: agregar un producto más a la lista `PRODUCTOS` de `datos-de-prueba.ts` y correr
+  el seed sobre una base nueva; o cambiar la cantidad de facturas (el `length: 50` de `planificarVentas`).

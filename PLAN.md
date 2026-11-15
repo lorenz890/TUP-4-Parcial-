@@ -155,7 +155,7 @@ Implementá el tablero de inicio: RF-T1 a RF-T3 y el endpoint de la sección
 
 Pruebo yo: que los gráficos muestren datos reales de las ventas que hice.
 
-## [ ] Etapa 11 — Datos de prueba y README
+## [x] Etapa 11 — Datos de prueba y README
 
 Completá el script de datos iniciales según la sección 10.7 y los datos de
 prueba de la sección 8: 2 usuarios (uno por rol), 5 categorías, 30 productos,

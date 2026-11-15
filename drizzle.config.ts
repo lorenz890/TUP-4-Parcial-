@@ -15,5 +15,5 @@ export default defineConfig({
         url: process.env.TURSO_DATABASE_URL!,
         authToken: process.env.TURSO_AUTH_TOKEN!,
       }
-    : { url: "file:local.db" },
+    : { url: process.env.BASE_LOCAL ?? "file:local.db" },
 });
