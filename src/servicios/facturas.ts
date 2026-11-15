@@ -259,9 +259,12 @@ export async function obtenerFactura(usuario: UsuarioAutenticado, idCrudo: unkno
   return leerFactura(id);
 }
 
-// RF-V1: el número que va a tener la próxima factura. Es solo informativo: el número
-// real se asigna al confirmar (regla 4).
-export async function proximoNumero() {
+// RF-V1: el número que va a tener la próxima factura, para cualquier usuario. Es solo
+// informativo: el número real se asigna al confirmar (regla 4). Recibe el usuario para tener
+// la misma firma que el resto de los servicios (sección 10.2), aunque no lo necesite: no hay
+// ningún permiso que verificar.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function proximoNumero(usuario: UsuarioAutenticado) {
   const [{ ultimo }] = await db
     .select({ ultimo: sql<number>`coalesce(max(${facturas.numero}), 0)` })
     .from(facturas)

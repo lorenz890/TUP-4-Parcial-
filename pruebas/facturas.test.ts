@@ -34,7 +34,7 @@ describe("confirmar una factura (RF-V6)", () => {
   it("descuenta el stock, toma el precio del servidor y asigna el número al confirmar", async () => {
     const a = await crearProductoDePrueba(admin, { existencia: 10, precio: 150000 });
     const b = await crearProductoDePrueba(admin, { existencia: 5, precio: 20000 });
-    const { numeroFormateado: esperado } = await proximoNumero();
+    const { numeroFormateado: esperado } = await proximoNumero(vendedor);
 
     const factura = await confirmarFactura(vendedor, {
       clienteId: null,
@@ -152,7 +152,7 @@ describe("una venta que no se puede completar no deja datos parciales", () => {
     const a = await crearProductoDePrueba(admin, { existencia: 10 });
     const b = await crearProductoDePrueba(admin, { existencia: 10 });
     const antes = await contarFilas();
-    const numeroAntes = (await proximoNumero()).numeroFormateado;
+    const numeroAntes = (await proximoNumero(vendedor)).numeroFormateado;
 
     // El 1.er moverStock funciona (graba stock y movimiento); el 2.º revienta.
     const { moverStock: real } = await vi.importActual<typeof import("@/servicios/stock")>("@/servicios/stock");
@@ -176,7 +176,7 @@ describe("una venta que no se puede completar no deja datos parciales", () => {
     expect(await contarFilas()).toEqual(antes);
     expect(await existenciaDe(a.id)).toBe(10);
     expect(await existenciaDe(b.id)).toBe(10);
-    expect((await proximoNumero()).numeroFormateado).toBe(numeroAntes); // el número quedó libre
+    expect((await proximoNumero(vendedor)).numeroFormateado).toBe(numeroAntes); // el número quedó libre
   });
 });
 

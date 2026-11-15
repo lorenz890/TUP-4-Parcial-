@@ -7,7 +7,7 @@ import { proximoNumero } from "@/servicios/facturas";
 // RF-V1 a RF-V5: la venta se arma en una sola pantalla y se confirma con la API.
 export default async function PaginaNuevaVenta() {
   const usuario = await exigirUsuario();
-  const { numeroFormateado } = await proximoNumero();
+  const { numeroFormateado } = await proximoNumero(usuario);
 
   return (
     <Pila>
