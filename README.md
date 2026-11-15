@@ -123,6 +123,12 @@ defensa, una sección por etapa).
 pnpm test
 ```
 
+Para revisar los tipos de TypeScript (también en un clon nuevo, porque primero genera los tipos de rutas de Next):
+
+```bash
+pnpm run typecheck
+```
+
 Corren con vitest sobre una base SQLite **temporal** (en la carpeta temporal del sistema, con el mismo esquema y las
 mismas migraciones que la aplicación). Nunca tocan `local.db` ni Turso: la configuración vacía las variables de Turso y
 `pruebas/seguridad.ts` corta si la base no es la temporal. Cubren la lista de control de la sección 10.8: venta sin stock
