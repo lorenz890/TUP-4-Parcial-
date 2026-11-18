@@ -5,6 +5,7 @@ import { facturas, movimientosCuenta, movimientosStock } from "@/db/esquema";
 import { ApiError } from "@/lib/api-error";
 import { calcularSaldo } from "@/servicios/clientes";
 import { anularFactura, confirmarFactura, obtenerFactura, proximoNumero } from "@/servicios/facturas";
+import { registrarPago } from "@/servicios/pagos";
 import { editarProducto } from "@/servicios/productos";
 import { moverStock } from "@/servicios/stock";
 import {
@@ -466,5 +467,64 @@ describe("anular una factura (RF-V9, reglas 2, 5 y 7)", () => {
     expect(siguiente.numero).toBe(primera.numero + 1);
     const [fila] = await db.select().from(facturas).where(eq(facturas.id, primera.id));
     expect(fila.numero).toBe(primera.numero); // la anulada conserva su número
+  });
+});
+
+describe("anular una venta a cuenta con pagos (regla 8: no hay saldos a favor)", () => {
+  it("venta de $2000 y pago de $1500: la anulación se rechaza y no cambia nada", async () => {
+    const producto = await crearProductoDePrueba(admin, { existencia: 10, precio: 200000 });
+    const cliente = await crearClienteDePrueba(vendedor, { cuentaCorriente: true });
+    const factura = await confirmarFactura(vendedor, {
+      clienteId: cliente.id,
+      items: [{ productoId: producto.id, cantidad: 1 }],
+      pago: { forma: "cuenta_corriente" },
+    });
+    await registrarPago(vendedor, cliente.id, { importe: 150000, medio: "efectivo" });
+    const antes = await contarFilas();
+
+    await rechazo(anularFactura(admin, factura.id, { motivo: "Error de carga" })).toMatchObject({
+      status: 422,
+      code: "ANULACION_CON_PAGOS",
+    });
+
+    // Nada cambió: la factura sigue emitida, el stock sigue descontado y el saldo es el de antes.
+    expect(await contarFilas()).toEqual(antes);
+    expect((await obtenerFactura(admin, factura.id)).estado).toBe("emitida");
+    expect(await existenciaDe(producto.id)).toBe(9);
+    expect(await calcularSaldo(db, cliente.id)).toBe(50000);
+  });
+
+  it("venta sin pagos: se anula bien y el saldo vuelve a cero", async () => {
+    const producto = await crearProductoDePrueba(admin, { existencia: 10, precio: 200000 });
+    const cliente = await crearClienteDePrueba(vendedor, { cuentaCorriente: true });
+    const factura = await confirmarFactura(vendedor, {
+      clienteId: cliente.id,
+      items: [{ productoId: producto.id, cantidad: 1 }],
+      pago: { forma: "cuenta_corriente" },
+    });
+
+    const anulada = await anularFactura(admin, factura.id, { motivo: "Error de carga" });
+
+    expect(anulada.estado).toBe("anulada");
+    expect(await existenciaDe(producto.id)).toBe(10);
+    expect(await calcularSaldo(db, cliente.id)).toBe(0);
+  });
+
+  it("con pagos pero otra deuda que lo cubre, la anulación sí se permite (el saldo no queda negativo)", async () => {
+    const producto = await crearProductoDePrueba(admin, { existencia: 10, precio: 200000 });
+    const cliente = await crearClienteDePrueba(vendedor, { cuentaCorriente: true });
+    const venta = (cantidad: number) =>
+      confirmarFactura(vendedor, {
+        clienteId: cliente.id,
+        items: [{ productoId: producto.id, cantidad }],
+        pago: { forma: "cuenta_corriente" },
+      });
+    const primera = await venta(1); // $2000
+    await venta(2); // $4000 más: la deuda total es $6000
+    await registrarPago(vendedor, cliente.id, { importe: 150000, medio: "efectivo" }); // queda $4500
+
+    await anularFactura(admin, primera.id, { motivo: "Error de carga" }); // $4500 - $2000 = $2500
+
+    expect(await calcularSaldo(db, cliente.id)).toBe(250000);
   });
 });

@@ -194,9 +194,10 @@ export async function confirmarFactura(usuario: UsuarioAutenticado, entrada: unk
   return leerFactura(idFactura);
 }
 
-// RF-V9, reglas 2, 5 y 7: la anulación hace lo inverso de la confirmación, en una sola
+// RF-V9, reglas 2, 5, 7 y 8: la anulación hace lo inverso de la confirmación, en una sola
 // transacción. Solo el administrador, y con motivo obligatorio. La factura NO se borra:
-// queda visible con estado "anulada".
+// queda visible con estado "anulada". Si el cliente ya pagó parte de esa venta y anularla le
+// dejaría saldo a favor, se rechaza (regla 8: no se admiten saldos a favor).
 export async function anularFactura(usuario: UsuarioAutenticado, idCrudo: unknown, entrada: unknown) {
   const id = esquemaId.parse(idCrudo);
   const { motivo } = esquemaAnularFactura.parse(entrada);
@@ -222,6 +223,21 @@ export async function anularFactura(usuario: UsuarioAutenticado, idCrudo: unknow
         throw new ApiError(404, "NO_ENCONTRADO", "La factura no existe.");
       }
       throw new ApiError(409, "FACTURA_ANULADA", "La factura ya estaba anulada.");
+    }
+
+    // REGLA 8: el crédito de la anulación no puede dejar el saldo del cliente por debajo de
+    // cero. Se calcula acá adentro, en la misma transacción: si falla, se deshace también el
+    // cambio de estado de arriba y la factura sigue emitida.
+    if (anulada.formaPago === "cuenta_corriente" && anulada.clienteId) {
+      const saldoActual = await calcularSaldo(tx, anulada.clienteId);
+      if (saldoActual - anulada.total < 0) {
+        throw new ApiError(
+          422,
+          "ANULACION_CON_PAGOS",
+          "No se puede anular: el cliente ya pagó parte de esta venta y la anulación le dejaría saldo a favor, que el sistema no admite.",
+          { saldoActual, total: anulada.total, saldoAFavor: anulada.total - saldoActual },
+        );
+      }
     }
 
     // Se reingresa la existencia de cada renglón, con un movimiento de anulación.
