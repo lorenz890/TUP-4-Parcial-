@@ -97,7 +97,8 @@ export async function confirmarFactura(usuario: UsuarioAutenticado, entrada: unk
       const producto = productoPorId.get(item.productoId)!;
       return {
         productoId: producto.id,
-        descripcion: producto.descripcion, // se COPIA: si cambia el catálogo, la factura no
+        codigo: producto.codigo, // se COPIAN: si cambia el catálogo, la factura no
+        descripcion: producto.descripcion,
         cantidad: item.cantidad,
         precioUnitario: producto.precio,
         subtotal: producto.precio * item.cantidad,
@@ -149,6 +150,11 @@ export async function confirmarFactura(usuario: UsuarioAutenticado, entrada: unk
         puntoVenta: PUNTO_DE_VENTA,
         numero,
         clienteId: cliente?.id,
+        // REGLA 3: los datos del cliente que muestra el comprobante también se copian.
+        clienteNombre: cliente?.nombre,
+        clienteTipoDoc: cliente?.tipoDoc,
+        clienteNroDoc: cliente?.nroDoc,
+        clienteDomicilio: cliente?.domicilio,
         usuarioId: usuario.id,
         total,
         formaPago: datos.pago.forma,
@@ -294,12 +300,13 @@ export async function listarFacturas(usuario: UsuarioAutenticado, entrada: unkno
   const { q, desde, hasta, clienteId, vendedorId, forma, estado, page, pageSize } =
     esquemaListarFacturas.parse(entrada);
 
-  // `q` busca por número ("0001-00001233" o solo "1233") o por nombre del cliente.
+  // `q` busca por número ("0001-00001233" o solo "1233") o por el nombre del cliente tal
+  // como quedó en la factura (copiado al vender, regla 3).
   const numeroBuscado = q && /^(\d{1,4}-)?\d+$/.test(q) ? Number(q.split("-").pop()) : null;
   const filtros = and(
     q
       ? or(
-          like(clientes.nombre, `%${q}%`),
+          like(facturas.clienteNombre, `%${q}%`),
           numeroBuscado !== null ? eq(facturas.numero, numeroBuscado) : undefined,
         )
       : undefined,
@@ -317,7 +324,6 @@ export async function listarFacturas(usuario: UsuarioAutenticado, entrada: unkno
       totalEmitido: sql<number>`coalesce(sum(case when ${facturas.estado} = 'emitida' then ${facturas.total} else 0 end), 0)`,
     })
     .from(facturas)
-    .leftJoin(clientes, eq(clientes.id, facturas.clienteId))
     .where(filtros);
 
   const filas = await db
@@ -329,13 +335,12 @@ export async function listarFacturas(usuario: UsuarioAutenticado, entrada: unkno
       estado: facturas.estado,
       formaPago: facturas.formaPago,
       total: facturas.total,
-      clienteId: clientes.id,
-      clienteNombre: clientes.nombre,
+      clienteId: facturas.clienteId,
+      clienteNombre: facturas.clienteNombre,
       vendedorId: usuarios.id,
       vendedorNombre: usuarios.nombre,
     })
     .from(facturas)
-    .leftJoin(clientes, eq(clientes.id, facturas.clienteId))
     .innerJoin(usuarios, eq(usuarios.id, facturas.usuarioId))
     .where(filtros)
     .orderBy(desc(facturas.fecha), desc(facturas.id))
@@ -362,29 +367,26 @@ async function leerFactura(id: number) {
   const [fila] = await db
     .select({
       factura: facturas,
-      cliente: clientes,
       vendedorNombre: usuarios.nombre,
     })
     .from(facturas)
-    .leftJoin(clientes, eq(clientes.id, facturas.clienteId))
     .innerJoin(usuarios, eq(usuarios.id, facturas.usuarioId))
     .where(eq(facturas.id, id));
   if (!fila) {
     throw new ApiError(404, "NO_ENCONTRADO", "La factura no existe.");
   }
-  const { factura, cliente } = fila;
+  const { factura } = fila;
 
   const renglones = await db
     .select({
       productoId: facturaItems.productoId,
-      codigo: productos.codigo,
+      codigo: facturaItems.codigo, // el copiado al vender, no el actual del catálogo
       descripcion: facturaItems.descripcion,
       cantidad: facturaItems.cantidad,
       precioUnitario: facturaItems.precioUnitario,
       subtotal: facturaItems.subtotal,
     })
     .from(facturaItems)
-    .innerJoin(productos, eq(productos.id, facturaItems.productoId))
     .where(eq(facturaItems.facturaId, id))
     .orderBy(facturaItems.id);
 
@@ -438,13 +440,14 @@ async function leerFactura(id: number) {
     numeroFormateado: formatearNumeroFactura(factura.puntoVenta, factura.numero),
     fecha: factura.fecha,
     estado: factura.estado,
-    cliente: cliente
+    // Los datos del cliente salen de la propia factura (copiados al vender), no de `clientes`.
+    cliente: factura.clienteId
       ? {
-          id: cliente.id,
-          nombre: cliente.nombre,
-          tipoDoc: cliente.tipoDoc,
-          nroDoc: formatearDocumento(cliente.tipoDoc, cliente.nroDoc),
-          domicilio: cliente.domicilio,
+          id: factura.clienteId,
+          nombre: factura.clienteNombre!,
+          tipoDoc: factura.clienteTipoDoc!,
+          nroDoc: formatearDocumento(factura.clienteTipoDoc!, factura.clienteNroDoc!),
+          domicilio: factura.clienteDomicilio,
         }
       : null,
     vendedor: { id: factura.usuarioId, nombre: fila.vendedorNombre },

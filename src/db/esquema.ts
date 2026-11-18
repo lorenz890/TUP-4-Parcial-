@@ -93,6 +93,13 @@ export const facturas = sqliteTable(
     numero: integer().notNull(), // se asigna al confirmar, correlativo y sin huecos
     fecha: fechaActual("fecha"),
     clienteId: integer("cliente_id").references(() => clientes.id), // nulo = consumidor final
+    // Regla 3, ampliada: los datos del cliente que muestra el comprobante se COPIAN al vender,
+    // igual que el precio. Si después se edita el cliente, la factura vieja no cambia.
+    // Nulos cuando es consumidor final.
+    clienteNombre: text("cliente_nombre"),
+    clienteTipoDoc: text("cliente_tipo_doc", { enum: TIPOS_DOCUMENTO }),
+    clienteNroDoc: text("cliente_nro_doc"), // solo dígitos, como en clientes
+    clienteDomicilio: text("cliente_domicilio"),
     usuarioId: integer("usuario_id")
       .notNull()
       .references(() => usuarios.id), // el vendedor
@@ -127,7 +134,10 @@ export const facturaItems = sqliteTable(
     productoId: integer("producto_id")
       .notNull()
       .references(() => productos.id),
-    // Regla 3: descripción y precio se COPIAN del catálogo al facturar.
+    // Regla 3: código, descripción y precio se COPIAN del catálogo al facturar. El default
+    // vacío solo existe para poder agregar la columna a una tabla con filas (la migración
+    // rellena las viejas); el servicio siempre graba el código real.
+    codigo: text().notNull().default(""),
     descripcion: text().notNull(),
     cantidad: integer().notNull(),
     precioUnitario: integer("precio_unitario").notNull(), // centavos
