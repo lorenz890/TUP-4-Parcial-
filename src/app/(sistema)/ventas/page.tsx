@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EncabezadoPagina } from "@/components/comunes/encabezado-pagina";
 import { EstadoVacio } from "@/components/comunes/estado-vacio";
 import { Paginador } from "@/components/comunes/paginador";
-import { Pila } from "@/components/maquetacion";
+import { Pila, Texto } from "@/components/maquetacion";
 import { FiltrosFacturas } from "@/components/ventas/filtros-facturas";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -60,14 +60,17 @@ export default async function PaginaFacturas({ searchParams }: PageProps<"/venta
       {facturas.data.length === 0 ? (
         <EstadoVacio mensaje="No hay facturas que coincidan con los filtros." />
       ) : (
+        // En el celular (360 px) no entran todas las columnas: Fecha, Cliente, Vendedor y Forma de
+        // pago se ocultan debajo de `sm` (el cliente pasa a una segunda línea bajo el número) para
+        // que Total y Estado se vean sin deslizar la tabla. El detalle completo está en el comprobante.
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Número</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Vendedor</TableHead>
-              <TableHead>Forma de pago</TableHead>
+              <TableHead className="hidden sm:table-cell">Fecha</TableHead>
+              <TableHead className="hidden sm:table-cell">Cliente</TableHead>
+              <TableHead className="hidden sm:table-cell">Vendedor</TableHead>
+              <TableHead className="hidden sm:table-cell">Forma de pago</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="text-right">Total</TableHead>
             </TableRow>
@@ -79,13 +82,17 @@ export default async function PaginaFacturas({ searchParams }: PageProps<"/venta
                   <Link href={`/ventas/${factura.id}`} className="hover:underline">
                     {factura.numeroFormateado}
                   </Link>
+                  {/* Solo en el celular: la columna Cliente está oculta y el nombre va debajo del número. */}
+                  <Texto className="whitespace-normal font-sans text-xs text-muted-foreground sm:hidden">
+                    {factura.cliente?.nombre ?? "Consumidor final"}
+                  </Texto>
                 </TableCell>
-                <TableCell className="whitespace-nowrap">{formatearFechaHora(factura.fecha)}</TableCell>
-                <TableCell className={cn(!factura.cliente && "text-muted-foreground")}>
+                <TableCell className="hidden whitespace-nowrap sm:table-cell">{formatearFechaHora(factura.fecha)}</TableCell>
+                <TableCell className={cn("hidden sm:table-cell", !factura.cliente && "text-muted-foreground")}>
                   {factura.cliente?.nombre ?? "Consumidor final"}
                 </TableCell>
-                <TableCell>{factura.vendedor.nombre}</TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">{factura.vendedor.nombre}</TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge variant="outline">{NOMBRES_FORMA_DE_PAGO[factura.formaPago]}</Badge>
                 </TableCell>
                 <TableCell>
@@ -93,7 +100,7 @@ export default async function PaginaFacturas({ searchParams }: PageProps<"/venta
                     {factura.estado === "anulada" ? "Anulada" : "Emitida"}
                   </Badge>
                 </TableCell>
-                <TableCell className={cn("text-right", factura.estado === "anulada" && "line-through")}>
+                <TableCell className={cn("text-right whitespace-nowrap", factura.estado === "anulada" && "line-through")}>
                   {formatearMoneda(factura.total)}
                 </TableCell>
               </TableRow>
