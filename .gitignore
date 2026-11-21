@@ -14,8 +14,8 @@ dist/
 *.tsbuildinfo
 
 # Variables de entorno (secretos fuera de Git; .env.example sí se sube)
-.env
-.env*.local
+.env*
+!.env.example
 
 # Bases SQLite locales
 *.db
