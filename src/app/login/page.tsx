@@ -12,14 +12,14 @@ export default async function PaginaLogin() {
   return (
     <Grilla className="min-h-screen gap-0 lg:grid-cols-2">
       {/* Panel de presentación: en celular se oculta para que el formulario quede a la vista sin deslizar. */}
-      <Pila className="hidden justify-center gap-12 bg-zinc-900 p-10 text-zinc-100 lg:flex">
+      <Pila className="hidden justify-between bg-zinc-900 p-10 text-zinc-100 lg:flex">
         <Fila className="gap-3">
           <Store className="size-8 text-blue-400" />
           <Texto className="text-xl font-semibold">Gestión comercial</Texto>
         </Fila>
 
         <Pila className="gap-6">
-          <Titulo className="text-3xl">Todo tu negocio en un solo lugar.</Titulo>
+          <Titulo className="text-3xl">Vendé, cobrá y controlá tu stock sin vueltas</Titulo>
           <Pila className="gap-3 text-zinc-300">
             <Fila className="gap-3">
               <Receipt className="size-5 text-blue-400" />
@@ -39,19 +39,23 @@ export default async function PaginaLogin() {
             </Fila>
           </Pila>
         </Pila>
+
+        <Texto className="text-zinc-500">2º Parcial · Programación IV</Texto>
       </Pila>
 
-      {/* Columna del formulario: es la misma tarjeta de antes, centrada. */}
+      {/* Columna del formulario, centrada. */}
       <Pila className="items-center justify-center bg-muted/40 p-4">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Gestión comercial</CardTitle>
+            <CardTitle>Ingresá a tu cuenta</CardTitle>
             <CardDescription>Ingresá con tu email y contraseña.</CardDescription>
           </CardHeader>
           <CardContent>
-            <FormularioLogin />
+            {/* La variable se lee en el servidor; si no está, los botones demo ni se dibujan. */}
+            <FormularioLogin mostrarDemo={process.env.DEMO_LOGIN === "true"} />
           </CardContent>
         </Card>
+        <Texto className="text-muted-foreground">¿No tenés usuario? Pedíselo al administrador</Texto>
       </Pila>
     </Grilla>
   );

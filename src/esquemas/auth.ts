@@ -1,5 +1,6 @@
 import { z } from "zod";
 import "./comunes";
+import { ROLES } from "./valores";
 
 // El email se guarda siempre en minúsculas para que no haya dos usuarios
 // distintos por una diferencia de mayúsculas.
@@ -24,5 +25,12 @@ export const esquemaCambioContrasena = z
   .object({
     actual: z.string().min(1, "Es obligatoria."),
     nueva: campoContrasenaNueva,
+  })
+  .strict();
+
+// Modo demo: el cliente solo elige el rol; qué usuario corresponde lo decide el servidor.
+export const esquemaLoginDemo = z
+  .object({
+    rol: z.enum(ROLES),
   })
   .strict();
