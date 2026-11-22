@@ -3,8 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { db } from "@/db/conexion";
 import { facturas, movimientosCuenta, movimientosStock } from "@/db/esquema";
 import { ApiError } from "@/lib/api-error";
-import { calcularSaldo } from "@/servicios/clientes";
-import { anularFactura, confirmarFactura, obtenerFactura, proximoNumero } from "@/servicios/facturas";
+import { calcularSaldo, crearCliente, editarCliente } from "@/servicios/clientes";
+import { anularFactura, confirmarFactura, listarFacturas, obtenerFactura, proximoNumero } from "@/servicios/facturas";
+import { registrarPago } from "@/servicios/pagos";
 import { editarProducto } from "@/servicios/productos";
 import { moverStock } from "@/servicios/stock";
 import {
@@ -466,5 +467,104 @@ describe("anular una factura (RF-V9, reglas 2, 5 y 7)", () => {
     expect(siguiente.numero).toBe(primera.numero + 1);
     const [fila] = await db.select().from(facturas).where(eq(facturas.id, primera.id));
     expect(fila.numero).toBe(primera.numero); // la anulada conserva su número
+  });
+});
+
+describe("anular una venta a cuenta con pagos (regla 8: no hay saldos a favor)", () => {
+  it("venta de $2000 y pago de $1500: la anulación se rechaza y no cambia nada", async () => {
+    const producto = await crearProductoDePrueba(admin, { existencia: 10, precio: 200000 });
+    const cliente = await crearClienteDePrueba(vendedor, { cuentaCorriente: true });
+    const factura = await confirmarFactura(vendedor, {
+      clienteId: cliente.id,
+      items: [{ productoId: producto.id, cantidad: 1 }],
+      pago: { forma: "cuenta_corriente" },
+    });
+    await registrarPago(vendedor, cliente.id, { importe: 150000, medio: "efectivo" });
+    const antes = await contarFilas();
+
+    await rechazo(anularFactura(admin, factura.id, { motivo: "Error de carga" })).toMatchObject({
+      status: 422,
+      code: "ANULACION_CON_PAGOS",
+    });
+
+    // Nada cambió: la factura sigue emitida, el stock sigue descontado y el saldo es el de antes.
+    expect(await contarFilas()).toEqual(antes);
+    expect((await obtenerFactura(admin, factura.id)).estado).toBe("emitida");
+    expect(await existenciaDe(producto.id)).toBe(9);
+    expect(await calcularSaldo(db, cliente.id)).toBe(50000);
+  });
+
+  it("venta sin pagos: se anula bien y el saldo vuelve a cero", async () => {
+    const producto = await crearProductoDePrueba(admin, { existencia: 10, precio: 200000 });
+    const cliente = await crearClienteDePrueba(vendedor, { cuentaCorriente: true });
+    const factura = await confirmarFactura(vendedor, {
+      clienteId: cliente.id,
+      items: [{ productoId: producto.id, cantidad: 1 }],
+      pago: { forma: "cuenta_corriente" },
+    });
+
+    const anulada = await anularFactura(admin, factura.id, { motivo: "Error de carga" });
+
+    expect(anulada.estado).toBe("anulada");
+    expect(await existenciaDe(producto.id)).toBe(10);
+    expect(await calcularSaldo(db, cliente.id)).toBe(0);
+  });
+
+  it("con pagos pero otra deuda que lo cubre, la anulación sí se permite (el saldo no queda negativo)", async () => {
+    const producto = await crearProductoDePrueba(admin, { existencia: 10, precio: 200000 });
+    const cliente = await crearClienteDePrueba(vendedor, { cuentaCorriente: true });
+    const venta = (cantidad: number) =>
+      confirmarFactura(vendedor, {
+        clienteId: cliente.id,
+        items: [{ productoId: producto.id, cantidad }],
+        pago: { forma: "cuenta_corriente" },
+      });
+    const primera = await venta(1); // $2000
+    await venta(2); // $4000 más: la deuda total es $6000
+    await registrarPago(vendedor, cliente.id, { importe: 150000, medio: "efectivo" }); // queda $4500
+
+    await anularFactura(admin, primera.id, { motivo: "Error de carga" }); // $4500 - $2000 = $2500
+
+    expect(await calcularSaldo(db, cliente.id)).toBe(250000);
+  });
+});
+
+describe("el comprobante congela los datos del cliente y del producto (regla 3)", () => {
+  it("editar el cliente y el producto después de vender no cambia la factura vieja", async () => {
+    const producto = await crearProductoDePrueba(admin, { existencia: 10, precio: 25000 });
+    const cliente = await crearCliente(vendedor, {
+      tipoDoc: "DNI",
+      nroDoc: String(30_000_000 + Math.floor(Math.random() * 9_999_999)),
+      nombre: "Ana Pérez",
+      domicilio: "Calle Falsa 123",
+      cuentaCorriente: false,
+    });
+    const factura = await confirmarFactura(vendedor, {
+      clienteId: cliente.id,
+      items: [{ productoId: producto.id, cantidad: 2 }],
+      pago: contadoSimple,
+    });
+    const antes = await obtenerFactura(vendedor, factura.id);
+
+    // Después de vender: se cambian el nombre, el documento y el domicilio del cliente, y el
+    // código y la descripción del producto.
+    await editarCliente(vendedor, cliente.id, {
+      nombre: "Ana María Gómez",
+      tipoDoc: "DNI", // el tipo y el número de documento se cambian juntos
+      nroDoc: String(40_000_000 + Math.floor(Math.random() * 9_999_999)),
+      domicilio: "Otra calle 999",
+    });
+    await editarProducto(admin, producto.id, { codigo: `NUEVO-${Date.now()}`, descripcion: "Descripción nueva" });
+
+    const despues = await obtenerFactura(vendedor, factura.id);
+    expect(despues.cliente).toEqual(antes.cliente);
+    expect(despues.cliente).toMatchObject({ nombre: "Ana Pérez", domicilio: "Calle Falsa 123" });
+    expect(despues.items).toEqual(antes.items);
+    expect(despues.items[0].codigo).toBe(factura.items[0].codigo);
+    expect(despues.items[0].descripcion).not.toBe("Descripción nueva");
+
+    // El listado tampoco cambia: muestra el nombre copiado, no el actual del cliente.
+    const listado = await listarFacturas(vendedor, { clienteId: cliente.id });
+    expect(listado.data[0].cliente?.nombre).toBe("Ana Pérez");
   });
 });

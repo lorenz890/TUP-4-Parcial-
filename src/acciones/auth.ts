@@ -3,11 +3,18 @@
 import { redirect } from "next/navigation";
 import { accion, accionPublica } from "@/lib/accion";
 import { abrirSesion, cerrarSesion } from "@/lib/sesion";
-import { cambiarContrasena, iniciarSesion } from "@/servicios/auth";
+import { cambiarContrasena, iniciarSesion, iniciarSesionDemo } from "@/servicios/auth";
 
 // RF-U1. Igual que la ruta de login: el servicio valida y la acción abre la cookie.
 export const iniciarSesionAccion = accionPublica(async (entrada: unknown) => {
   const usuario = await iniciarSesion(entrada);
+  await abrirSesion(usuario.id);
+  return usuario;
+});
+
+// Modo demo. Abre la cookie con la MISMA función que el login normal (abrirSesion).
+export const iniciarSesionDemoAccion = accionPublica(async (entrada: unknown) => {
+  const usuario = await iniciarSesionDemo(entrada);
   await abrirSesion(usuario.id);
   return usuario;
 });

@@ -8,6 +8,13 @@
       "when": 1794678458552,
       "tag": "0000_esquema_inicial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794962743890,
+      "tag": "0001_congelar_datos_de_la_factura",
+      "breakpoints": true
     }
   ]
 }
