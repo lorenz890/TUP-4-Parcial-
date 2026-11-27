@@ -43,8 +43,8 @@ export default async function PaginaLogin() {
         <Texto className="text-zinc-500">2º Parcial · Programación IV</Texto>
       </Pila>
 
-      {/* Columna del formulario, centrada. */}
-      <Pila className="items-center justify-center bg-muted/40 p-4">
+      {/* Columna del formulario, centrada. El pb-28 reserva lugar para que los datos del grupo no la tapen. */}
+      <Pila className="relative items-center justify-center bg-muted/40 p-4 pb-28">
         <Card className="w-full max-w-sm">
           <CardHeader>
             <CardTitle>Ingresá a tu cuenta</CardTitle>
@@ -56,6 +56,13 @@ export default async function PaginaLogin() {
           </CardContent>
         </Card>
         <Texto className="text-muted-foreground">¿No tenés usuario? Pedíselo al administrador</Texto>
+
+        <Pila className="absolute right-4 bottom-4 gap-0 text-right text-muted-foreground">
+          <Texto className="font-semibold">Grupo 6</Texto>
+          <Texto>Lorenzo Gaiser 61851</Texto>
+          <Texto>Ulices Acosta 63409</Texto>
+          <Texto>Tomás Gómez Asat 61343</Texto>
+        </Pila>
       </Pila>
     </Grilla>
   );
